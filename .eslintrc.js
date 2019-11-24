@@ -32,9 +32,6 @@ module.exports = {
                 mocha: true,
                 commonjs: true,
                 node: true
-            },
-            parserOptions: {
-                sourceType: "script"
             }
         }
     ]

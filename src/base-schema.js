@@ -7,12 +7,24 @@
 // Helpers
 //------------------------------------------------------------------------------
 
+/**
+ * Assets that a given value is an array.
+ * @param {*} value The value to check.
+ * @returns {void}
+ * @throws {TypeError} When the value is not an array. 
+ */
 function assertIsArray(value) {
     if (!Array.isArray(value)) {
         throw new TypeError("Expected value to be an array.");
     }
 }
 
+/**
+ * Assets that a given value is an array containing only strings.
+ * @param {*} value The value to check.
+ * @returns {void}
+ * @throws {TypeError} When the value is not an array of strings.
+ */
 function assertIsArrayOfStrings(value, name) {
     assertIsArray(value, name);
 
@@ -25,6 +37,10 @@ function assertIsArrayOfStrings(value, name) {
 // Exports
 //------------------------------------------------------------------------------
 
+/**
+ * The base schema that every ConfigArray uses.
+ * @type Object
+ */
 export const baseSchema = Object.freeze({
     name: {
         required: false,

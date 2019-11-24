@@ -20,6 +20,40 @@ const expect = chai.expect;
 
 const basePath = path.dirname(import.meta.url);
 
+const schema = {
+    language: {
+        required: false,
+        validate(value) {
+            if (typeof value !== "function") {
+                throw new TypeError("Expected a function.");
+            }
+        },
+        merge(a, b) {
+            if (!b) {
+                return a;
+            }
+
+            if (!a) {
+                return b;
+            }
+        }
+    },
+    defs: {
+        required: false,
+        validate(value) {
+            if (!value || typeof value !== "object") {
+                throw new TypeError("Object expected.");
+            }
+        },
+        merge(a, b) {
+            return {
+                ...a,
+                ...b
+            };
+        }
+    }
+};
+
 const JSLanguage = class {};
 const CSSLanguage = class {};
 const MarkdownLanguage = class {};
@@ -40,12 +74,11 @@ function createConfigArray() {
             language: MarkdownLanguage
         }, {
             defs: {
-                ruleNamespaces: {
-                    js: {}
-                }
+                name: "config-array"
             }
         }], {
-        basePath: path.dirname(import.meta.url)
+        basePath: path.dirname(import.meta.url),
+        schema
     });
 }
 
@@ -57,9 +90,9 @@ describe("ConfigArray", () => {
 
     let configs;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         configs = createConfigArray();
-        configs.normalize();
+        await configs.normalize();
     });
 
     describe("getConfig()", () => {
@@ -71,8 +104,7 @@ describe("ConfigArray", () => {
             
             expect(config.language).to.equal(JSLanguage);
             expect(config.defs).to.be.an("object");
-            expect(config.defs.ruleNamespaces).to.be.an("object");
-            expect(config.defs.ruleNamespaces.js).to.be.an("object");
+            expect(config.defs.name).to.equal("config-array");
         });
 
         it("should calculate correct config when passed CSS filename", () => {
@@ -81,8 +113,7 @@ describe("ConfigArray", () => {
             const config = configs.getConfig(filename);
             expect(config.language).to.equal(CSSLanguage);
             expect(config.defs).to.be.an("object");
-            expect(config.defs.ruleNamespaces).to.be.an("object");
-            expect(config.defs.ruleNamespaces.js).to.be.an("object");
+            expect(config.defs.name).to.equal("config-array");
 
         });
 

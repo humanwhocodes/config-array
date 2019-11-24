@@ -24,13 +24,31 @@ const MINIMATCH_OPTIONS = {
     matchBase: true
 };
 
-function normalize(items, context) {
+
+/**
+ * Normalizes a `ConfigArray` by flattening it and executing any functions
+ * that are found inside.
+ * @param {Array} items The items in a `ConfigArray`.
+ * @param {Object} context The context object to pass into any function
+ *      found.
+ * @returns {Array} A flattened array containing only config objects.
+ * @throws {TypeError} When a config function returns a function.
+ */
+async function normalize(items, context) {
+
+    // TODO: Allow async config functions
 
     function *flatTraverse(array) {
-        for (const item of array) {
+        for (let item of array) {
+            if (typeof item === "function") {
+                item = item(context);
+            }
+            
             if (Array.isArray(item)) {
                 yield* flatTraverse(item);
-            } else {
+            } else if (typeof item === "function") {
+                throw new TypeError("A config function can only return an object or array.");
+            } else  {
                 yield item;
             }
         }
@@ -41,12 +59,27 @@ function normalize(items, context) {
     return [...flatTraverse(items)];
 }
 
-
+/**
+ * Determines if a given file path is matched by a config. If the config
+ * has no `files` field, then it matches; otherwise, if a `files` field
+ * is present then we match the globs in `files` and exclude any globs in
+ * `ignores`.
+ * @param {string} relativeFilePath The file path to check relative to
+ *      the `ConfigArray` `basePath` option.
+ * @param {Object} config The config object to check.
+ * @returns {boolean} True if the file path is matched by the config,
+ *      false if not.
+ */
 function pathMatches(relativeFilePath, config) {
+
+    // a config without a `files` field always matches
+    if (!config.files) {
+        return true;
+    }
 
     // check for all matches to config.files
     let matches = config.files.some(pattern => {
-        return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS)
+        return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
     });
 
     /*
@@ -55,13 +88,19 @@ function pathMatches(relativeFilePath, config) {
      */
     if (matches && config.ignores) {
         matches = !config.ignores.some(pattern => {
-            return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS)
+            return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
         });
     }
 
     return matches;
 }
 
+/**
+ * Ensures that a ConfigArray has been normalized.
+ * @param {ConfigArray} configArray The ConfigArray to check. 
+ * @returns {void}
+ * @throws {Error} When the `ConfigArray` is not normalized.
+ */
 function assertNormalized(configArray) {
     // TODO: Throw more verbose error
     if (!configArray.isNormalized()) {
@@ -74,7 +113,6 @@ function assertNormalized(configArray) {
 //------------------------------------------------------------------------------
 
 const isNormalized = Symbol("isNormalized");
-const rules = Symbol("rules");
 const configCache = Symbol("configCache");
 const schema = Symbol("schema");
 
@@ -91,10 +129,10 @@ export class ConfigArray extends Array {
      * @param {string} [options.basePath=""] The path of the config file
      * @param {boolean} [options.normalized=false] Flag indicating if the
      *      configs have already been normalized.
-     * @param {Object} [options.schemaDefs] The additional schema 
+     * @param {Object} [options.schema] The additional schema 
      *      definitions to use for the ConfigArray schema.
      */
-    constructor(configs, { basePath = "", normalized = false, schemaDefs } = {}) {
+    constructor(configs, { basePath = "", normalized = false, schema: customSchema } = {}) {
         super();
 
         /**
@@ -112,8 +150,8 @@ export class ConfigArray extends Array {
          * @private
          */
         this[schema] = new ObjectSchema({
-            ...baseSchema,
-            ...schemaDefs
+            ...customSchema,
+            ...baseSchema
         });
 
         /**
@@ -153,6 +191,27 @@ export class ConfigArray extends Array {
     }
 
     /**
+     * Returns the `files` globs from every config object in the array.
+     * This can be used to determine which files will be matched by a
+     * config array.
+     * @returns {string[]} An array of string patterns.
+     */
+    get files() {
+
+        assertNormalized(this);
+
+        const result = [];
+
+        for (const config of this) {
+            if (config.files) {
+                result.push(...config.files);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Returns the file globs that should always be ignored regardless of
      * the matching `files` fields in any configs. This is necessary to mimic
      * the behavior of things like .gitignore and .eslintignore, allowing a
@@ -185,13 +244,13 @@ export class ConfigArray extends Array {
     /**
      * Normalizes a config array by flattening embedded arrays and executing
      * config functions.
-     * @param {ConfigContext} context The context object for configs.
+     * @param {ConfigContext} context The context object for config functions.
      * @returns {ConfigArray} A new ConfigArray instance that is normalized.
      */
     async normalize(context = {}) {
 
         if (!this.isNormalized()) {
-            const normalizedConfigs = normalize(this);
+            const normalizedConfigs = await normalize(this, context);
             this.length = 0;
             this.push(...normalizedConfigs);
             this[isNormalized] = true;        
@@ -225,7 +284,7 @@ export class ConfigArray extends Array {
         const relativeFilePath = path.relative(this.basePath, filePath);
 
         for (const config of this) {
-            if (!config.files || pathMatches(relativeFilePath, config)) {
+            if (pathMatches(relativeFilePath, config)) {
                 debug(`Matching config found for ${relativeFilePath}`);
                 matchingConfigs.push(config);
             } else {
