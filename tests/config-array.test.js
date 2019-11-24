@@ -76,6 +76,30 @@ function createConfigArray() {
             defs: {
                 name: "config-array"
             }
+        }, {
+            files: ["foo.test.js"],
+            defs: {
+                name: "config-array.test"
+            }
+        }, function (context) {
+            return {
+                files: ["bar.test.js"],
+                defs: {
+                    name: context.name
+                }
+            };
+        }, function (context) {
+            return [{
+                files: ["baz.test.js"],
+                defs: {
+                    name: "baz-" + context.name
+                }
+            }, {
+                files: ["boom.test.js"],
+                defs: {
+                    name: "boom-" + context.name
+                }
+            }];
         }], {
         basePath: path.dirname(import.meta.url),
         schema
@@ -92,7 +116,9 @@ describe("ConfigArray", () => {
 
     beforeEach(async () => {
         configs = createConfigArray();
-        await configs.normalize();
+        await configs.normalize({
+            name: "from-context"
+        });
     });
 
     describe("getConfig()", () => {
@@ -105,6 +131,42 @@ describe("ConfigArray", () => {
             expect(config.language).to.equal(JSLanguage);
             expect(config.defs).to.be.an("object");
             expect(config.defs.name).to.equal("config-array");
+        });
+
+        it("should calculate correct config when passed JS filename that matches two configs", () => {
+            const filename = path.resolve(basePath, "foo.test.js");
+
+            const config = configs.getConfig(filename);
+            
+            expect(config.language).to.equal(JSLanguage);
+            expect(config.defs).to.be.an("object");
+            expect(config.defs.name).to.equal("config-array.test");
+        });
+
+        it("should calculate correct config when passed JS filename that matches a function config", () => {
+            const filename = path.resolve(basePath, "bar.test.js");
+
+            const config = configs.getConfig(filename);
+            
+            expect(config.language).to.equal(JSLanguage);
+            expect(config.defs).to.be.an("object");
+            expect(config.defs.name).to.equal("from-context");
+        });
+
+        it("should calculate correct config when passed JS filename that matches a function config returning an array", () => {
+            const filename1 = path.resolve(basePath, "baz.test.js");
+            const config1 = configs.getConfig(filename1);
+            
+            expect(config1.language).to.equal(JSLanguage);
+            expect(config1.defs).to.be.an("object");
+            expect(config1.defs.name).to.equal("baz-from-context");
+
+            const filename2 = path.resolve(basePath, "baz.test.js");
+            const config2 = configs.getConfig(filename2);
+            
+            expect(config2.language).to.equal(JSLanguage);
+            expect(config2.defs).to.be.an("object");
+            expect(config2.defs.name).to.equal("baz-from-context");
         });
 
         it("should calculate correct config when passed CSS filename", () => {
@@ -125,7 +187,6 @@ describe("ConfigArray", () => {
 
             expect(config1).to.equal(config2);
         });
-
 
     });
 
