@@ -4,7 +4,7 @@ module.exports = {
     },
     "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 2018,
+        "ecmaVersion": 2020,
         "sourceType": "module"
     },
     "rules": {
@@ -30,8 +30,6 @@ module.exports = {
             files: ["tests/*.js"],
             env: {
                 mocha: true,
-                commonjs: true,
-                node: true
             }
         }
     ]
