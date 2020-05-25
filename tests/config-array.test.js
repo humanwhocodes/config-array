@@ -125,7 +125,37 @@ describe("ConfigArray", () => {
             name: "from-context"
         });
     });
-    
+
+    describe("Validation", () => {
+        it("should throw an error when files is not an array", async () => {
+            configs = new ConfigArray([
+                {
+                    files: "*.js"
+                }
+            ], { basePath });
+            await configs.normalize();
+
+            expect(() => {
+                configs.getConfig("foo.js");
+            }).to.throw(/non\-empty array/);
+
+        });
+
+        it("should throw an error when files is an empty array", async () => {
+            configs = new ConfigArray([
+                {
+                    files: []
+                }
+            ], { basePath });
+            await configs.normalize();
+
+            expect(() => {
+                configs.getConfig("foo.js");
+            }).to.throw(/non\-empty array/);
+
+        });
+    });
+
     describe("ConfigArray members", () => {
 
         beforeEach(() => {

@@ -77,6 +77,11 @@ function pathMatches(relativeFilePath, config) {
         return true;
     }
 
+    // if files isn't an array, throw an error
+    if (!Array.isArray(config.files) || config.files.length === 0) {
+        throw new TypeError("The files key must be a non-empty array.");
+    }
+
     // check for all matches to config.files
     let matches = config.files.some(pattern => {
         return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
