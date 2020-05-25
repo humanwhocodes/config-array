@@ -103,6 +103,12 @@ function createConfigArray() {
                     name: "boom-" + context.name
                 }
             }];
+        },
+        {
+            files: [["*.and.*", "*.js"]],
+            defs: {
+                name: "AND operator"
+            }
         }], {
         basePath,
         schema
@@ -245,6 +251,16 @@ describe("ConfigArray", () => {
                 expect(config.language).to.equal(CSSLanguage);
                 expect(config.defs).to.be.an("object");
                 expect(config.defs.name).to.equal("config-array");
+
+            });
+
+            it("should calculate correct config when passed JS filename that matches AND pattern", () => {
+                const filename = path.resolve(basePath, "foo.and.js");
+
+                const config = configs.getConfig(filename);
+                expect(config.language).to.equal(JSLanguage);
+                expect(config.defs).to.be.an("object");
+                expect(config.defs.name).to.equal("AND operator");
 
             });
 

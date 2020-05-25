@@ -58,7 +58,21 @@ export const baseSchema = Object.freeze({
         merge() {
             return undefined;
         },
-        validate: assertIsArrayOfStrings
+        validate(value) {
+
+            // first check if it's an array
+            assertIsArray(value);
+
+            // then check each member
+            value.forEach(item => {
+                if (Array.isArray(item)) {
+                    assertIsArrayOfStrings(item);
+                } else if (typeof item !== "string") {
+                    throw new TypeError("Items must be a string or an array of strings.");
+                }
+            });
+        
+        }
     },
     ignores: {
         required: false,

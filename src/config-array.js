@@ -84,7 +84,14 @@ function pathMatches(relativeFilePath, config) {
 
     // check for all matches to config.files
     let matches = config.files.some(pattern => {
-        return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+        if (typeof pattern === "string") {
+            return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+        }
+
+        // otherwise it's an array where we need to AND the patterns
+        return pattern.every(subpattern => {
+            return minimatch(relativeFilePath, subpattern, MINIMATCH_OPTIONS);
+        });
     });
 
     /*

@@ -140,11 +140,19 @@ export default [
             files: ["package.json"],
             handler: packageJsonHandler
         }
-    ]
+    ],
+
+    // filename must match all patterns in subarray
+    {
+        files: [ ["*.test.*", "*.js"] ],
+        handler: jsTestHandler
+    }
 ];
 ```
 
-In this example, the array contains both a config object and a config array. When a config array is normalized (see details below), it is flattened so only config objects remain. However, the order of evaluation remains the same.
+In this example, the array contains both config objects and a config array. When a config array is normalized (see details below), it is flattened so only config objects remain. However, the order of evaluation remains the same.
+
+If the `files` array contains an item that is an array of strings, then all patterns must match in order for the config to match. In the preceding examples, both `*.test.*` and `*.js` must match in order for the config object to be used.
 
 ### Config Functions
 
