@@ -288,7 +288,13 @@ describe("ConfigArray", () => {
             it("should return all files from all configs when called", () => {
                 const expectedFiles = configs.reduce((list, config) => {
                     if (config.files) {
-                        list.push(...config.files);
+                        config.files.forEach(filePatterns => {
+                            if (Array.isArray(filePatterns)) {
+                                list.push(...filePatterns);
+                            } else {
+                                list.push(filePatterns);
+                            }
+                        })
                     }
 
                     return list;

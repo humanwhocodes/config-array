@@ -216,7 +216,13 @@ export class ConfigArray extends Array {
 
         for (const config of this) {
             if (config.files) {
-                result.push(...config.files);
+                config.files.forEach(filePattern => {
+                    if (Array.isArray(filePattern)) {
+                        result.push(...filePattern);
+                    } else {
+                        result.push(filePattern);
+                    }
+                });
             }
         }
 
