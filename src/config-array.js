@@ -54,8 +54,6 @@ async function normalize(items, context) {
         }
     }
 
-    // TODO: Execute config functions
-
     return [...flatTraverse(items)];
 }
 
@@ -204,8 +202,10 @@ export class ConfigArray extends Array {
 
     /**
      * Returns the `files` globs from every config object in the array.
+     * Negated patterns (those beginning with `!`) are not returned.
      * This can be used to determine which files will be matched by a
-     * config array.
+     * config array or to use as a glob pattern when no patterns are provided
+     * for a command line interface.
      * @returns {string[]} An array of string patterns.
      */
     get files() {
@@ -218,8 +218,10 @@ export class ConfigArray extends Array {
             if (config.files) {
                 config.files.forEach(filePattern => {
                     if (Array.isArray(filePattern)) {
-                        result.push(...filePattern);
-                    } else {
+                        result.push(...filePattern.filter(pattern => {
+                            return !pattern.startsWith("!");
+                        }));
+                    } else if (!filePattern.startsWith("!")) {
                         result.push(filePattern);
                     }
                 });

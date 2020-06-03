@@ -73,6 +73,12 @@ function createConfigArray() {
             files: ["**/*.md", "**/.markdown"],
             language: MarkdownLanguage
         }, {
+        }, {
+            files: ["!*.css"],
+            defs: {
+                css: false
+            }
+        }, {
             ignores: ["tests/fixtures/**"],
             defs: {
                 name: "config-array"
@@ -206,6 +212,7 @@ describe("ConfigArray", () => {
                 expect(config.language).to.equal(JSLanguage);
                 expect(config.defs).to.be.an("object");
                 expect(config.defs.name).to.equal("config-array");
+                expect(config.defs.css).to.be.false;
             });
 
             it("should calculate correct config when passed JS filename that matches two configs", () => {
@@ -216,6 +223,7 @@ describe("ConfigArray", () => {
                 expect(config.language).to.equal(JSLanguage);
                 expect(config.defs).to.be.an("object");
                 expect(config.defs.name).to.equal("config-array.test");
+                expect(config.defs.css).to.be.false;
             });
 
             it("should calculate correct config when passed JS filename that matches a function config", () => {
@@ -226,6 +234,7 @@ describe("ConfigArray", () => {
                 expect(config.language).to.equal(JSLanguage);
                 expect(config.defs).to.be.an("object");
                 expect(config.defs.name).to.equal("from-context");
+                expect(config.defs.css).to.be.false;
             });
 
             it("should calculate correct config when passed JS filename that matches a function config returning an array", () => {
@@ -242,6 +251,7 @@ describe("ConfigArray", () => {
                 expect(config2.language).to.equal(JSLanguage);
                 expect(config2.defs).to.be.an("object");
                 expect(config2.defs.name).to.equal("baz-from-context");
+                expect(config2.defs.css).to.be.false;
             });
 
             it("should calculate correct config when passed CSS filename", () => {
@@ -261,7 +271,7 @@ describe("ConfigArray", () => {
                 expect(config.language).to.equal(JSLanguage);
                 expect(config.defs).to.be.an("object");
                 expect(config.defs.name).to.equal("AND operator");
-
+                expect(config.defs.css).to.be.false;
             });
 
             it("should return the same config when called with the same filename twice", () => {
@@ -290,9 +300,13 @@ describe("ConfigArray", () => {
                     if (config.files) {
                         config.files.forEach(filePatterns => {
                             if (Array.isArray(filePatterns)) {
-                                list.push(...filePatterns);
+                                list.push(...filePatterns.filter(pattern => {
+                                    return !pattern.startsWith("!");
+                                }));
                             } else {
-                                list.push(filePatterns);
+                                if (!filePatterns.startsWith("!")) {
+                                    list.push(filePatterns);
+                                }
                             }
                         })
                     }
