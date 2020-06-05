@@ -7,23 +7,22 @@
 // Imports
 //------------------------------------------------------------------------------
 
-import path from "path";
-import minimatch from "minimatch";
-import createDebug from "debug";
+import path from 'path';
+import minimatch from 'minimatch';
+import createDebug from 'debug';
 
-import { ObjectSchema } from "@humanwhocodes/object-schema";
-import { baseSchema } from "./base-schema.js";
+import { ObjectSchema } from '@humanwhocodes/object-schema';
+import { baseSchema } from './base-schema.js';
 
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
 
-const debug = createDebug("@hwc/config-array");
+const debug = createDebug('@hwc/config-array');
 
 const MINIMATCH_OPTIONS = {
-    matchBase: true
+	matchBase: true
 };
-
 
 /**
  * Normalizes a `ConfigArray` by flattening it and executing any functions
@@ -36,25 +35,25 @@ const MINIMATCH_OPTIONS = {
  */
 async function normalize(items, context) {
 
-    // TODO: Allow async config functions
+	// TODO: Allow async config functions
 
-    function *flatTraverse(array) {
-        for (let item of array) {
-            if (typeof item === "function") {
-                item = item(context);
-            }
-            
-            if (Array.isArray(item)) {
-                yield* flatTraverse(item);
-            } else if (typeof item === "function") {
-                throw new TypeError("A config function can only return an object or array.");
-            } else  {
-                yield item;
-            }
-        }
-    }
+	function *flatTraverse(array) {
+		for (let item of array) {
+			if (typeof item === 'function') {
+				item = item(context);
+			}
 
-    return [...flatTraverse(items)];
+			if (Array.isArray(item)) {
+				yield * flatTraverse(item);
+			} else if (typeof item === 'function') {
+				throw new TypeError('A config function can only return an object or array.');
+			} else {
+				yield item;
+			}
+		}
+	}
+
+	return [...flatTraverse(items)];
 }
 
 /**
@@ -70,39 +69,39 @@ async function normalize(items, context) {
  */
 function pathMatches(relativeFilePath, config) {
 
-    // a config without a `files` field always matches
-    if (!config.files) {
-        return true;
-    }
+	// a config without a `files` field always matches
+	if (!config.files) {
+		return true;
+	}
 
-    // if files isn't an array, throw an error
-    if (!Array.isArray(config.files) || config.files.length === 0) {
-        throw new TypeError("The files key must be a non-empty array.");
-    }
+	// if files isn't an array, throw an error
+	if (!Array.isArray(config.files) || config.files.length === 0) {
+		throw new TypeError('The files key must be a non-empty array.');
+	}
 
-    // check for all matches to config.files
-    let matches = config.files.some(pattern => {
-        if (typeof pattern === "string") {
-            return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
-        }
+	// check for all matches to config.files
+	let matches = config.files.some(pattern => {
+		if (typeof pattern === 'string') {
+			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+		}
 
-        // otherwise it's an array where we need to AND the patterns
-        return pattern.every(subpattern => {
-            return minimatch(relativeFilePath, subpattern, MINIMATCH_OPTIONS);
-        });
-    });
+		// otherwise it's an array where we need to AND the patterns
+		return pattern.every(subpattern => {
+			return minimatch(relativeFilePath, subpattern, MINIMATCH_OPTIONS);
+		});
+	});
 
-    /*
-     * If the file path matches the config.files patterns, then check to see
-     * if there are any files to ignore.
-     */
-    if (matches && config.ignores) {
-        matches = !config.ignores.some(pattern => {
-            return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
-        });
-    }
+	/*
+	 * If the file path matches the config.files patterns, then check to see
+	 * if there are any files to ignore.
+	 */
+	if (matches && config.ignores) {
+		matches = !config.ignores.some(pattern => {
+			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+		});
+	}
 
-    return matches;
+	return matches;
 }
 
 /**
@@ -112,19 +111,19 @@ function pathMatches(relativeFilePath, config) {
  * @throws {Error} When the `ConfigArray` is not normalized.
  */
 function assertNormalized(configArray) {
-    // TODO: Throw more verbose error
-    if (!configArray.isNormalized()) {
-        throw new Error("ConfigArray must be normalized to perform this operation.");
-    }
+	// TODO: Throw more verbose error
+	if (!configArray.isNormalized()) {
+		throw new Error('ConfigArray must be normalized to perform this operation.');
+	}
 }
 
 //------------------------------------------------------------------------------
 // Public Interface
 //------------------------------------------------------------------------------
 
-const isNormalized = Symbol("isNormalized");
-const configCache = Symbol("configCache");
-const schema = Symbol("schema");
+const isNormalized = Symbol('isNormalized');
+const configCache = Symbol('configCache');
+const schema = Symbol('schema');
 
 /**
  * Represents an array of config objects and provides method for working with
@@ -132,193 +131,193 @@ const schema = Symbol("schema");
  */
 export class ConfigArray extends Array {
 
-    /**
-     * Creates a new instance of ConfigArray.
-     * @param {Iterable|Function|Object} configs An iterable yielding config
-     *      objects, or a config function, or a config object.
-     * @param {string} [options.basePath=""] The path of the config file
-     * @param {boolean} [options.normalized=false] Flag indicating if the
-     *      configs have already been normalized.
-     * @param {Object} [options.schema] The additional schema 
-     *      definitions to use for the ConfigArray schema.
-     */
-    constructor(configs, { basePath = "", normalized = false, schema: customSchema } = {}) {
-        super();
+	/**
+	 * Creates a new instance of ConfigArray.
+	 * @param {Iterable|Function|Object} configs An iterable yielding config
+	 *      objects, or a config function, or a config object.
+	 * @param {string} [options.basePath=""] The path of the config file
+	 * @param {boolean} [options.normalized=false] Flag indicating if the
+	 *      configs have already been normalized.
+	 * @param {Object} [options.schema] The additional schema 
+	 *      definitions to use for the ConfigArray schema.
+	 */
+	constructor(configs, { basePath = '', normalized = false, schema: customSchema } = {}) {
+		super();
 
-        /**
-         * Tracks if the array has been normalized.
-         * @property isNormalized
-         * @type boolean
-         * @private
-         */
-        this[isNormalized] = normalized;
-        
-        /**
-         * The schema used for validating and merging configs.
-         * @property schema
-         * @type ObjectSchema
-         * @private
-         */
-        this[schema] = new ObjectSchema({
-            ...customSchema,
-            ...baseSchema
-        });
+		/**
+		 * Tracks if the array has been normalized.
+		 * @property isNormalized
+		 * @type boolean
+		 * @private
+		 */
+		this[isNormalized] = normalized;
 
-        /**
-         * The path of the config file that this array was loaded from.
-         * This is used to calculate filename matches.
-         * @property basePath
-         * @type string
-         */
-        this.basePath = basePath;
-        
-        /**
-         * A cache to store calculated configs for faster repeat lookup.
-         * @property configCache
-         * @type Map
-         * @private
-         */
-        this[configCache] = new Map();
-        
-        // load the configs into this array
-        if (Array.isArray(configs)) {
-            this.push(...configs);
-        } else {
-            this.push(configs);
-        }
+		/**
+		 * The schema used for validating and merging configs.
+		 * @property schema
+		 * @type ObjectSchema
+		 * @private
+		 */
+		this[schema] = new ObjectSchema({
+			...customSchema,
+			...baseSchema
+		});
 
-    }
+		/**
+		 * The path of the config file that this array was loaded from.
+		 * This is used to calculate filename matches.
+		 * @property basePath
+		 * @type string
+		 */
+		this.basePath = basePath;
 
-    /**
-     * Prevent normal array methods from creating a new `ConfigArray` instance.
-     * This is to ensure that methods such as `slice()` won't try to create a 
-     * new instance of `ConfigArray` behind the scenes as doing so may throw
-     * an error due to the different constructor signature.
-     * @returns {Function} The `Array` constructor.
-     */
-    static get [Symbol.species]() {
-        return Array;
-    }
+		/**
+		 * A cache to store calculated configs for faster repeat lookup.
+		 * @property configCache
+		 * @type Map
+		 * @private
+		 */
+		this[configCache] = new Map();
 
-    /**
-     * Returns the `files` globs from every config object in the array.
-     * Negated patterns (those beginning with `!`) are not returned.
-     * This can be used to determine which files will be matched by a
-     * config array or to use as a glob pattern when no patterns are provided
-     * for a command line interface.
-     * @returns {string[]} An array of string patterns.
-     */
-    get files() {
+		// load the configs into this array
+		if (Array.isArray(configs)) {
+			this.push(...configs);
+		} else {
+			this.push(configs);
+		}
 
-        assertNormalized(this);
+	}
 
-        const result = [];
+	/**
+	 * Prevent normal array methods from creating a new `ConfigArray` instance.
+	 * This is to ensure that methods such as `slice()` won't try to create a 
+	 * new instance of `ConfigArray` behind the scenes as doing so may throw
+	 * an error due to the different constructor signature.
+	 * @returns {Function} The `Array` constructor.
+	 */
+	static get [Symbol.species]() {
+		return Array;
+	}
 
-        for (const config of this) {
-            if (config.files) {
-                config.files.forEach(filePattern => {
-                    if (Array.isArray(filePattern)) {
-                        result.push(...filePattern.filter(pattern => {
-                            return !pattern.startsWith("!");
-                        }));
-                    } else if (!filePattern.startsWith("!")) {
-                        result.push(filePattern);
-                    }
-                });
-            }
-        }
+	/**
+	 * Returns the `files` globs from every config object in the array.
+	 * Negated patterns (those beginning with `!`) are not returned.
+	 * This can be used to determine which files will be matched by a
+	 * config array or to use as a glob pattern when no patterns are provided
+	 * for a command line interface.
+	 * @returns {string[]} An array of string patterns.
+	 */
+	get files() {
 
-        return result;
-    }
+		assertNormalized(this);
 
-    /**
-     * Returns the file globs that should always be ignored regardless of
-     * the matching `files` fields in any configs. This is necessary to mimic
-     * the behavior of things like .gitignore and .eslintignore, allowing a
-     * globbing operation to be faster.
-     * @returns {string[]} An array of string patterns to be ignored.
-     */
-    get ignores() {
+		const result = [];
 
-        assertNormalized(this);
+		for (const config of this) {
+			if (config.files) {
+				config.files.forEach(filePattern => {
+					if (Array.isArray(filePattern)) {
+						result.push(...filePattern.filter(pattern => {
+							return !pattern.startsWith('!');
+						}));
+					} else if (!filePattern.startsWith('!')) {
+						result.push(filePattern);
+					}
+				});
+			}
+		}
 
-        const result = [];
+		return result;
+	}
 
-        for (const config of this) {
-            if (config.ignores && !config.files) {
-                result.push(...config.ignores);
-            }
-        }
+	/**
+	 * Returns the file globs that should always be ignored regardless of
+	 * the matching `files` fields in any configs. This is necessary to mimic
+	 * the behavior of things like .gitignore and .eslintignore, allowing a
+	 * globbing operation to be faster.
+	 * @returns {string[]} An array of string patterns to be ignored.
+	 */
+	get ignores() {
 
-        return result;
-    }
+		assertNormalized(this);
 
-    /**
-     * Indicates if the config array has been normalized.
-     * @returns {boolean} True if the config array is normalized, false if not.
-     */
-    isNormalized() {
-        return this[isNormalized];
-    }
+		const result = [];
 
-    /**
-     * Normalizes a config array by flattening embedded arrays and executing
-     * config functions.
-     * @param {ConfigContext} context The context object for config functions.
-     * @returns {ConfigArray} A new ConfigArray instance that is normalized.
-     */
-    async normalize(context = {}) {
+		for (const config of this) {
+			if (config.ignores && !config.files) {
+				result.push(...config.ignores);
+			}
+		}
 
-        if (!this.isNormalized()) {
-            const normalizedConfigs = await normalize(this, context);
-            this.length = 0;
-            this.push(...normalizedConfigs);
-            this[isNormalized] = true;        
+		return result;
+	}
 
-            // prevent further changes
-            Object.freeze(this);
-        }
+	/**
+	 * Indicates if the config array has been normalized.
+	 * @returns {boolean} True if the config array is normalized, false if not.
+	 */
+	isNormalized() {
+		return this[isNormalized];
+	}
 
-        return this;
-    }
+	/**
+	 * Normalizes a config array by flattening embedded arrays and executing
+	 * config functions.
+	 * @param {ConfigContext} context The context object for config functions.
+	 * @returns {ConfigArray} A new ConfigArray instance that is normalized.
+	 */
+	async normalize(context = {}) {
 
-    /**
-     * Returns the config object for a given file path.
-     * @param {string} filePath The complete path of a file to get a config for.
-     * @returns {Object} The config object for this file.
-     */
-    getConfig(filePath) {
+		if (!this.isNormalized()) {
+			const normalizedConfigs = await normalize(this, context);
+			this.length = 0;
+			this.push(...normalizedConfigs);
+			this[isNormalized] = true;
 
-        assertNormalized(this);
+			// prevent further changes
+			Object.freeze(this);
+		}
 
-        // first check the cache to avoid duplicate work
-        let finalConfig = this[configCache].get(filePath);
+		return this;
+	}
 
-        if (finalConfig) {
-            return finalConfig;
-        }
+	/**
+	 * Returns the config object for a given file path.
+	 * @param {string} filePath The complete path of a file to get a config for.
+	 * @returns {Object} The config object for this file.
+	 */
+	getConfig(filePath) {
 
-        // No config found in cache, so calculate a new one
+		assertNormalized(this);
 
-        const matchingConfigs = [];
-        const relativeFilePath = path.relative(this.basePath, filePath);
+		// first check the cache to avoid duplicate work
+		let finalConfig = this[configCache].get(filePath);
 
-        for (const config of this) {
-            if (pathMatches(relativeFilePath, config)) {
-                debug(`Matching config found for ${relativeFilePath}`);
-                matchingConfigs.push(config);
-            } else {
-                debug(`No matching config found for ${relativeFilePath}`);
-            }
-        }
+		if (finalConfig) {
+			return finalConfig;
+		}
 
-        finalConfig = matchingConfigs.reduce((result, config) => {
-            return this[schema].merge(result, config);
-        }, {}, this);
+		// No config found in cache, so calculate a new one
 
-        this[configCache].set(filePath, finalConfig);
+		const matchingConfigs = [];
+		const relativeFilePath = path.relative(this.basePath, filePath);
 
-        return finalConfig;
-    }
+		for (const config of this) {
+			if (pathMatches(relativeFilePath, config)) {
+				debug(`Matching config found for ${relativeFilePath}`);
+				matchingConfigs.push(config);
+			} else {
+				debug(`No matching config found for ${relativeFilePath}`);
+			}
+		}
+
+		finalConfig = matchingConfigs.reduce((result, config) => {
+			return this[schema].merge(result, config);
+		}, {}, this);
+
+		this[configCache].set(filePath, finalConfig);
+
+		return finalConfig;
+	}
 
 }

@@ -1,3 +1,4 @@
+/*global module:true*/
 module.exports = {
     "env": {
         "es6": true,
@@ -8,18 +9,6 @@ module.exports = {
         "sourceType": "module"
     },
     "rules": {
-        "indent": [
-            "error",
-            4
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "double"
-        ],
         "semi": [
             "error",
             "always"
@@ -30,6 +19,16 @@ module.exports = {
             files: ["tests/*.js"],
             env: {
                 mocha: true,
+                node: true
+            }
+        },
+        {
+            files: ["*.config.js"],
+            parserOptions: {
+                sourceType: "script",
+            },
+            env: {
+                node: true
             }
         }
     ]
