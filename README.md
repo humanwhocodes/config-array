@@ -142,6 +142,12 @@ export default [
         }
     ],
 
+    // filename must match function
+    {
+        files: [ filePath => filePath.endsWith(".md") ],
+        handler: markdownHandler
+    },
+
     // filename must match all patterns in subarray
     {
         files: [ ["*.test.*", "*.js"] ],
@@ -161,7 +167,9 @@ export default [
 
 In this example, the array contains both config objects and a config array. When a config array is normalized (see details below), it is flattened so only config objects remain. However, the order of evaluation remains the same.
 
-If the `files` array contains an item that is an array of strings, then all patterns must match in order for the config to match. In the preceding examples, both `*.test.*` and `*.js` must match in order for the config object to be used.
+If the `files` array contains a function, then that function is called with the absolute path of the file and is expected to return `true` if there is a match and `false` if not. (The `ignores` array can also contain functions.)
+
+If the `files` array contains an item that is an array of strings and functions, then all patterns must match in order for the config to match. In the preceding examples, both `*.test.*` and `*.js` must match in order for the config object to be used.
 
 If a pattern in the files array begins with `!` then it excludes that pattern. In the preceding example, any filename that doesn't end with `.js` will automatically getting a `settings.js` property set to `false`.
 

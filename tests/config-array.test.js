@@ -58,7 +58,7 @@ const CSSLanguage = class {};
 const MarkdownLanguage = class {};
 const JSONLanguage = class {};
 
-function createConfigArray() {
+function createConfigArray(options) {
 	return new ConfigArray([
 		{
 			files: ['**/*.js'],
@@ -127,10 +127,23 @@ function createConfigArray() {
 			defs: {
 				name: 'AND operator'
 			}
+		},
+		{
+			files: [filePath => filePath.endsWith('.html')],
+			defs: {
+				name: 'HTML'
+			}
+		},
+		{
+			ignores: [filePath => filePath.endsWith('.gitignore')],
+			defs: {
+				ignored: '.gitignore'
+			}
 		}
 	], {
 		basePath,
-		schema
+		schema,
+		...options
 	});
 }
 
@@ -234,6 +247,26 @@ describe('ConfigArray', () => {
 				expect(config.defs.css).to.be.false;
 			});
 
+			it('should calculate correct config when passed HTML filename', () => {
+				const filename = path.resolve(basePath, 'foo.html');
+
+				const config = configs.getConfig(filename);
+
+				expect(config.defs).to.be.an('object');
+				expect(config.defs.name).to.equal('HTML');
+				expect(config.defs.ignored).to.equal('.gitignore');
+			});
+
+			it('should calculate correct config when passed .gitignore filename', () => {
+				const filename = path.resolve(basePath, '.gitignore');
+
+				const config = configs.getConfig(filename);
+
+				expect(config.defs).to.be.an('object');
+				expect(config.defs.name).to.equal('config-array');
+				expect(config.defs.ignored).to.equal('.gitignore');
+			});
+
 			it('should calculate correct config when passed JS filename that matches two configs', () => {
 				const filename = path.resolve(basePath, 'foo.test.js');
 
@@ -314,15 +347,15 @@ describe('ConfigArray', () => {
 					.throw(/normalized/);
 			});
 
-			it('should return all files from all configs when called', () => {
+			it('should return all string pattern file from all configs when called', () => {
 				const expectedFiles = configs.reduce((list, config) => {
 					if (config.files) {
 						config.files.forEach(filePatterns => {
 							if (Array.isArray(filePatterns)) {
 								list.push(...filePatterns.filter(pattern => {
-									return !pattern.startsWith('!');
+									return typeof pattern === 'string' && !pattern.startsWith('!');
 								}));
-							} else {
+							} else if (typeof filePatterns !== 'function') {
 								if (!filePatterns.startsWith('!')) {
 									list.push(filePatterns);
 								}
@@ -351,7 +384,7 @@ describe('ConfigArray', () => {
 			it('should return all ignores from all configs without files when called', () => {
 				const expectedIgnores = configs.reduce((list, config) => {
 					if (config.ignores && !config.files) {
-						list.push(...config.ignores);
+						list.push(...config.ignores.filter(pattern => typeof pattern === 'string'));
 					}
 
 					return list;

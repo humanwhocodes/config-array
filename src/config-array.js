@@ -25,6 +25,15 @@ const MINIMATCH_OPTIONS = {
 };
 
 /**
+ * Shorthand for checking if a value is a string.
+ * @param {any} value The value to check.
+ * @returns {boolean} True if a string, false if not. 
+ */
+function isString(value) {
+	return typeof value === 'string';
+}
+
+/**
  * Normalizes a `ConfigArray` by flattening it and executing any functions
  * that are found inside.
  * @param {Array} items The items in a `ConfigArray`.
@@ -61,13 +70,12 @@ async function normalize(items, context) {
  * has no `files` field, then it matches; otherwise, if a `files` field
  * is present then we match the globs in `files` and exclude any globs in
  * `ignores`.
- * @param {string} relativeFilePath The file path to check relative to
- *      the `ConfigArray` `basePath` option.
+ * @param {string} filePath The absolute file path to check.
  * @param {Object} config The config object to check.
  * @returns {boolean} True if the file path is matched by the config,
  *      false if not.
  */
-function pathMatches(relativeFilePath, config) {
+function pathMatches(filePath, basePath, config) {
 
 	// a config without a `files` field always matches
 	if (!config.files) {
@@ -79,16 +87,26 @@ function pathMatches(relativeFilePath, config) {
 		throw new TypeError('The files key must be a non-empty array.');
 	}
 
-	// check for all matches to config.files
-	let matches = config.files.some(pattern => {
-		if (typeof pattern === 'string') {
+	const relativeFilePath = path.relative(basePath, filePath);
+
+	// match both strings and functions
+	const match = pattern => {
+		if (isString(pattern)) {
 			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
 		}
 
-		// otherwise it's an array where we need to AND the patterns
-		return pattern.every(subpattern => {
-			return minimatch(relativeFilePath, subpattern, MINIMATCH_OPTIONS);
-		});
+		if (typeof pattern === 'function') {
+			return pattern(filePath);
+		}
+	};
+
+	// check for all matches to config.files
+	let matches = config.files.some(pattern => {
+		if (Array.isArray(pattern)) {
+			return pattern.every(match);
+		}
+
+		return match(pattern);
 	});
 
 	/*
@@ -97,7 +115,7 @@ function pathMatches(relativeFilePath, config) {
 	 */
 	if (matches && config.ignores) {
 		matches = !config.ignores.some(pattern => {
-			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+			return minimatch(filePath, pattern, MINIMATCH_OPTIONS);
 		});
 	}
 
@@ -218,9 +236,9 @@ export class ConfigArray extends Array {
 				config.files.forEach(filePattern => {
 					if (Array.isArray(filePattern)) {
 						result.push(...filePattern.filter(pattern => {
-							return !pattern.startsWith('!');
+							return isString(pattern) && !pattern.startsWith('!');
 						}));
-					} else if (!filePattern.startsWith('!')) {
+					} else if (isString(filePattern) && !filePattern.startsWith('!')) {
 						result.push(filePattern);
 					}
 				});
@@ -245,7 +263,7 @@ export class ConfigArray extends Array {
 
 		for (const config of this) {
 			if (config.ignores && !config.files) {
-				result.push(...config.ignores);
+				result.push(...config.ignores.filter(isString));
 			}
 		}
 
@@ -300,14 +318,13 @@ export class ConfigArray extends Array {
 		// No config found in cache, so calculate a new one
 
 		const matchingConfigs = [];
-		const relativeFilePath = path.relative(this.basePath, filePath);
 
 		for (const config of this) {
-			if (pathMatches(relativeFilePath, config)) {
-				debug(`Matching config found for ${relativeFilePath}`);
+			if (pathMatches(filePath, this.basePath, config)) {
+				debug(`Matching config found for ${filePath}`);
 				matchingConfigs.push(config);
 			} else {
-				debug(`No matching config found for ${relativeFilePath}`);
+				debug(`No matching config found for ${filePath}`);
 			}
 		}
 

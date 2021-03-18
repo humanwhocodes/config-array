@@ -20,15 +20,15 @@ function assertIsArray(value) {
 }
 
 /**
- * Assets that a given value is an array containing only strings.
+ * Assets that a given value is an array containing only strings and functions.
  * @param {*} value The value to check.
  * @returns {void}
- * @throws {TypeError} When the value is not an array of strings.
+ * @throws {TypeError} When the value is not an array of strings and functions.
  */
-function assertIsArrayOfStrings(value, name) {
+function assertIsArrayOfStringsAndFunctions(value, name) {
 	assertIsArray(value, name);
 
-	if (value.some(item => typeof item !== 'string')) {
+	if (value.some(item => typeof item !== 'string' && typeof item !== 'function')) {
 		throw new TypeError('Expected array to only contain strings.');
 	}
 }
@@ -66,9 +66,9 @@ export const baseSchema = Object.freeze({
 			// then check each member
 			value.forEach(item => {
 				if (Array.isArray(item)) {
-					assertIsArrayOfStrings(item);
-				} else if (typeof item !== 'string') {
-					throw new TypeError('Items must be a string or an array of strings.');
+					assertIsArrayOfStringsAndFunctions(item);
+				} else if (typeof item !== 'string' && typeof item !== 'function') {
+					throw new TypeError('Items must be a string, a function, or an array of strings and functions.');
 				}
 			});
 
@@ -79,6 +79,6 @@ export const baseSchema = Object.freeze({
 		merge() {
 			return undefined;
 		},
-		validate: assertIsArrayOfStrings
+		validate: assertIsArrayOfStringsAndFunctions
 	}
 });
