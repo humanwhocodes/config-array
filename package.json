@@ -1,6 +1,6 @@
 {
   "name": "@humanwhocodes/config-array",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Glob-based configuration matching.",
   "author": "Nicholas C. Zakas",
   "main": "api.js",
