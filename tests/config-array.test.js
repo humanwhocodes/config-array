@@ -7,7 +7,7 @@
 // Imports
 //-----------------------------------------------------------------------------
 
-import { ConfigArray } from '../src/config-array.js';
+import { ConfigArray, ConfigArraySymbol } from '../src/config-array.js';
 import path from 'path';
 import chai from 'chai';
 
@@ -205,6 +205,27 @@ describe('ConfigArray', () => {
 			return configs.normalize({
 				name: 'from-context'
 			});
+		});
+
+		describe('ConfigArraySymbol.finalizeConfig', () => {
+			it('should allow finalizeConfig to alter config before returning', async () => {
+
+				configs = createConfigArray();
+				configs[ConfigArraySymbol.finalizeConfig] = () => {
+					return {
+						name: 'from-finalize'
+					};
+				};
+
+				await configs.normalize({
+					name: 'from-context'
+				});
+
+				const filename = path.resolve(basePath, 'foo.js');
+				const config = configs.getConfig(filename);
+				expect(config.name).to.equal('from-finalize');
+			});
+
 		});
 
 		describe('basePath', () => {

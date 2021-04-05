@@ -139,9 +139,12 @@ function assertNormalized(configArray) {
 // Public Interface
 //------------------------------------------------------------------------------
 
-const isNormalized = Symbol('isNormalized');
-const configCache = Symbol('configCache');
-const schema = Symbol('schema');
+export const ConfigArraySymbol = {
+	isNormalized: Symbol('isNormalized'),
+	configCache: Symbol('configCache'),
+	schema: Symbol('schema'),
+	finalizeConfig: Symbol('finalizeConfig')
+};
 
 /**
  * Represents an array of config objects and provides method for working with
@@ -168,7 +171,7 @@ export class ConfigArray extends Array {
 		 * @type boolean
 		 * @private
 		 */
-		this[isNormalized] = normalized;
+		this[ConfigArraySymbol.isNormalized] = normalized;
 
 		/**
 		 * The schema used for validating and merging configs.
@@ -176,7 +179,7 @@ export class ConfigArray extends Array {
 		 * @type ObjectSchema
 		 * @private
 		 */
-		this[schema] = new ObjectSchema({
+		this[ConfigArraySymbol.schema] = new ObjectSchema({
 			...customSchema,
 			...baseSchema
 		});
@@ -195,7 +198,7 @@ export class ConfigArray extends Array {
 		 * @type Map
 		 * @private
 		 */
-		this[configCache] = new Map();
+		this[ConfigArraySymbol.configCache] = new Map();
 
 		// load the configs into this array
 		if (Array.isArray(configs)) {
@@ -275,7 +278,7 @@ export class ConfigArray extends Array {
 	 * @returns {boolean} True if the config array is normalized, false if not.
 	 */
 	isNormalized() {
-		return this[isNormalized];
+		return this[ConfigArraySymbol.isNormalized];
 	}
 
 	/**
@@ -290,13 +293,24 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = await normalize(this, context);
 			this.length = 0;
 			this.push(...normalizedConfigs);
-			this[isNormalized] = true;
+			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
 			Object.freeze(this);
 		}
 
 		return this;
+	}
+
+	/**
+	 * Finalizes the state of a config before being cached and returned by
+	 * `getConfig()`. Does nothing by default but is provided to be
+	 * overridden by subclasses as necessary.
+	 * @param {Object} config The config to finalize.
+	 * @returns {Object} The finalized config.
+	 */
+	[ConfigArraySymbol.finalizeConfig](config) {
+		return config;
 	}
 
 	/**
@@ -309,7 +323,7 @@ export class ConfigArray extends Array {
 		assertNormalized(this);
 
 		// first check the cache to avoid duplicate work
-		let finalConfig = this[configCache].get(filePath);
+		let finalConfig = this[ConfigArraySymbol.configCache].get(filePath);
 
 		if (finalConfig) {
 			return finalConfig;
@@ -329,10 +343,12 @@ export class ConfigArray extends Array {
 		}
 
 		finalConfig = matchingConfigs.reduce((result, config) => {
-			return this[schema].merge(result, config);
+			return this[ConfigArraySymbol.schema].merge(result, config);
 		}, {}, this);
 
-		this[configCache].set(filePath, finalConfig);
+		finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
+
+		this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
 
 		return finalConfig;
 	}
