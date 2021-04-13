@@ -143,7 +143,8 @@ export const ConfigArraySymbol = {
 	isNormalized: Symbol('isNormalized'),
 	configCache: Symbol('configCache'),
 	schema: Symbol('schema'),
-	finalizeConfig: Symbol('finalizeConfig')
+	finalizeConfig: Symbol('finalizeConfig'),
+	preprocessConfig: Symbol('preprocessConfig')
 };
 
 /**
@@ -292,7 +293,7 @@ export class ConfigArray extends Array {
 		if (!this.isNormalized()) {
 			const normalizedConfigs = await normalize(this, context);
 			this.length = 0;
-			this.push(...normalizedConfigs);
+			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -310,6 +311,18 @@ export class ConfigArray extends Array {
 	 * @returns {Object} The finalized config.
 	 */
 	[ConfigArraySymbol.finalizeConfig](config) {
+		return config;
+	}
+
+	/**
+	 * Preprocesses a config during the normalization process. This is the
+	 * method to override if you want to convert an array item before it is
+	 * validated for the first time. For example, if you want to replace a
+	 * string with an object, this is the method to override.
+	 * @param {Object} config The config to preprocess.
+	 * @returns {Object} The config to use in place of the argument.
+	 */
+	[ConfigArraySymbol.preprocessConfig](config) {
 		return config;
 	}
 

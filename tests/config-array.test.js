@@ -228,6 +228,36 @@ describe('ConfigArray', () => {
 
 		});
 
+		describe('ConfigArraySymbol.preprocessConfig', () => {
+			it('should allow preprocessConfig to alter config before returning', async () => {
+
+				configs = createConfigArray();
+				configs.push('foo:bar');
+
+				configs[ConfigArraySymbol.preprocessConfig] = config => {
+
+					if (config === 'foo:bar') {
+						return {
+							defs: {
+								name: 'foo:bar'
+							}
+						};
+					}
+
+					return config;
+				};
+
+				await configs.normalize({
+					name: 'from-context'
+				});
+
+				const filename = path.resolve(basePath, 'foo.js');
+				const config = configs.getConfig(filename);
+				expect(config.defs.name).to.equal('foo:bar');
+			});
+
+		});
+
 		describe('basePath', () => {
 			it('should store basePath property when basePath is provided', () => {
 				expect(unnormalizedConfigs.basePath).to.equal(basePath);
