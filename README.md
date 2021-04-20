@@ -210,7 +210,7 @@ export default [
 
 When a config array is normalized, each function is executed and replaced in the config array with the return value.
 
-**Note:** Config functions cannot be async. This will be added in a future version.
+**Note:** Config functions can also be async.
 
 ### Normalizing Config Arrays
 

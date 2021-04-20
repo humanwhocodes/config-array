@@ -44,12 +44,13 @@ function isString(value) {
  */
 async function normalize(items, context) {
 
-	// TODO: Allow async config functions
-
-	function *flatTraverse(array) {
+	async function *flatTraverse(array) {
 		for (let item of array) {
 			if (typeof item === 'function') {
 				item = item(context);
+				if (item.then) {
+					item = await item;
+				}
 			}
 
 			if (Array.isArray(item)) {
@@ -62,7 +63,18 @@ async function normalize(items, context) {
 		}
 	}
 
-	return [...flatTraverse(items)];
+	/*
+	 * Async iterables cannot be used with the spread operator, so we need to manually
+	 * create the array to return.
+	 */
+	const asyncIterable = await flatTraverse(items);
+	const configs = [];
+
+	for await (const config of asyncIterable) {
+		configs.push(config);
+	}
+
+	return configs;
 }
 
 /**

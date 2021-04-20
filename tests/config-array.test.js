@@ -122,6 +122,16 @@ function createConfigArray(options) {
 				}
 			];
 		},
+		function(context) {
+			return Promise.resolve([
+				{
+					files: ['async.test.js'],
+					defs: {
+						name: 'async-' + context.name
+					}
+				}
+			]);
+		},
 		{
 			files: [['*.and.*', '*.js']],
 			defs: {
@@ -337,6 +347,17 @@ describe('ConfigArray', () => {
 				expect(config.language).to.equal(JSLanguage);
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('from-context');
+				expect(config.defs.css).to.be.false;
+			});
+
+			it('should calculate correct config when passed JS filename that matches a async function config', () => {
+				const filename = path.resolve(basePath, 'async.test.js');
+
+				const config = configs.getConfig(filename);
+
+				expect(config.language).to.equal(JSLanguage);
+				expect(config.defs).to.be.an('object');
+				expect(config.defs.name).to.equal('async-from-context');
 				expect(config.defs.css).to.be.false;
 			});
 
