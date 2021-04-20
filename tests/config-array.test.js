@@ -122,16 +122,6 @@ function createConfigArray(options) {
 				}
 			];
 		},
-		function(context) {
-			return Promise.resolve([
-				{
-					files: ['async.test.js'],
-					defs: {
-						name: 'async-' + context.name
-					}
-				}
-			]);
-		},
 		{
 			files: [['*.and.*', '*.js']],
 			defs: {
@@ -218,7 +208,7 @@ describe('ConfigArray', () => {
 		});
 
 		describe('ConfigArraySymbol.finalizeConfig', () => {
-			it('should allow finalizeConfig to alter config before returning', async () => {
+			it('should allow finalizeConfig to alter config before returning when calling normalize()', async () => {
 
 				configs = createConfigArray();
 				configs[ConfigArraySymbol.finalizeConfig] = () => {
@@ -228,6 +218,24 @@ describe('ConfigArray', () => {
 				};
 
 				await configs.normalize({
+					name: 'from-context'
+				});
+
+				const filename = path.resolve(basePath, 'foo.js');
+				const config = configs.getConfig(filename);
+				expect(config.name).to.equal('from-finalize');
+			});
+
+			it('should allow finalizeConfig to alter config before returning when calling normalizeSync()', async () => {
+
+				configs = createConfigArray();
+				configs[ConfigArraySymbol.finalizeConfig] = () => {
+					return {
+						name: 'from-finalize'
+					};
+				};
+
+				configs.normalizeSync({
 					name: 'from-context'
 				});
 
@@ -351,7 +359,42 @@ describe('ConfigArray', () => {
 			});
 
 			it('should calculate correct config when passed JS filename that matches a async function config', () => {
+				const configs = createConfigArray();
+				configs.push(context => {
+					return Promise.resolve([
+						{
+							files: ['async.test.js'],
+							defs: {
+								name: 'async-' + context.name
+							}
+						}
+					]);
+				});
+
+				expect(() => {
+					configs.normalizeSync();
+				})
+					.to
+					.throw(/Async config functions are not supported/);
+			});
+
+			it('should throw an error when passed JS filename that matches a async function config and normalizeSync() is called', async () => {
 				const filename = path.resolve(basePath, 'async.test.js');
+				const configs = createConfigArray();
+				configs.push(context => {
+					return Promise.resolve([
+						{
+							files: ['async.test.js'],
+							defs: {
+								name: 'async-' + context.name
+							}
+						}
+					]);
+				});
+
+				await configs.normalize({
+					name: 'from-context'
+				});
 
 				const config = configs.getConfig(filename);
 

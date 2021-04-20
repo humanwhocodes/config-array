@@ -39,7 +39,7 @@ function isString(value) {
  * @param {Array} items The items in a `ConfigArray`.
  * @param {Object} context The context object to pass into any function
  *      found.
- * @returns {Array} A flattened array containing only config objects.
+ * @returns {Promise<Array>} A flattened array containing only config objects.
  * @throws {TypeError} When a config function returns a function.
  */
 async function normalize(items, context) {
@@ -75,6 +75,39 @@ async function normalize(items, context) {
 	}
 
 	return configs;
+}
+
+/**
+ * Normalizes a `ConfigArray` by flattening it and executing any functions
+ * that are found inside.
+ * @param {Array} items The items in a `ConfigArray`.
+ * @param {Object} context The context object to pass into any function
+ *      found.
+ * @returns {Array} A flattened array containing only config objects.
+ * @throws {TypeError} When a config function returns a function.
+ */
+function normalizeSync(items, context) {
+
+	function *flatTraverse(array) {
+		for (let item of array) {
+			if (typeof item === 'function') {
+				item = item(context);
+				if (item.then) {
+					throw new TypeError('Async config functions are not supported.');
+				}
+			}
+
+			if (Array.isArray(item)) {
+				yield * flatTraverse(item);
+			} else if (typeof item === 'function') {
+				throw new TypeError('A config function can only return an object or array.');
+			} else {
+				yield item;
+			}
+		}
+	}
+
+	return [...flatTraverse(items)];
 }
 
 /**
@@ -298,12 +331,33 @@ export class ConfigArray extends Array {
 	 * Normalizes a config array by flattening embedded arrays and executing
 	 * config functions.
 	 * @param {ConfigContext} context The context object for config functions.
-	 * @returns {ConfigArray} A new ConfigArray instance that is normalized.
+	 * @returns {Promise<ConfigArray>} The current ConfigArray instance.
 	 */
 	async normalize(context = {}) {
 
 		if (!this.isNormalized()) {
 			const normalizedConfigs = await normalize(this, context);
+			this.length = 0;
+			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
+			this[ConfigArraySymbol.isNormalized] = true;
+
+			// prevent further changes
+			Object.freeze(this);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Normalizes a config array by flattening embedded arrays and executing
+	 * config functions.
+	 * @param {ConfigContext} context The context object for config functions.
+	 * @returns {ConfigArray} The current ConfigArray instance.
+	 */
+	normalizeSync(context = {}) {
+
+		if (!this.isNormalized()) {
+			const normalizedConfigs = normalizeSync(this, context);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
 			this[ConfigArraySymbol.isNormalized] = true;
