@@ -24,6 +24,8 @@ const MINIMATCH_OPTIONS = {
 	matchBase: true
 };
 
+const CONFIG_TYPES = new Set(['array', 'function']);
+
 /**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
@@ -39,14 +41,22 @@ function isString(value) {
  * @param {Array} items The items in a `ConfigArray`.
  * @param {Object} context The context object to pass into any function
  *      found.
+ * @param {Array<string>} extraConfigTypes The config types to check.
  * @returns {Promise<Array>} A flattened array containing only config objects.
  * @throws {TypeError} When a config function returns a function.
  */
-async function normalize(items, context) {
+async function normalize(items, context, extraConfigTypes) {
+
+	const allowFunctions = extraConfigTypes.includes('function');
+	const allowArrays = extraConfigTypes.includes('array');
 
 	async function *flatTraverse(array) {
 		for (let item of array) {
 			if (typeof item === 'function') {
+				if (!allowFunctions) {
+					throw new TypeError('Unexpected function.');
+				}
+
 				item = item(context);
 				if (item.then) {
 					item = await item;
@@ -54,6 +64,9 @@ async function normalize(items, context) {
 			}
 
 			if (Array.isArray(item)) {
+				if (!allowArrays) {
+					throw new TypeError('Unexpected array.');
+				}
 				yield * flatTraverse(item);
 			} else if (typeof item === 'function') {
 				throw new TypeError('A config function can only return an object or array.');
@@ -83,14 +96,23 @@ async function normalize(items, context) {
  * @param {Array} items The items in a `ConfigArray`.
  * @param {Object} context The context object to pass into any function
  *      found.
+ * @param {Array<string>} extraConfigTypes The config types to check.
  * @returns {Array} A flattened array containing only config objects.
  * @throws {TypeError} When a config function returns a function.
  */
-function normalizeSync(items, context) {
+function normalizeSync(items, context, extraConfigTypes) {
+
+	const allowFunctions = extraConfigTypes.includes('function');
+	const allowArrays = extraConfigTypes.includes('array');
 
 	function *flatTraverse(array) {
 		for (let item of array) {
 			if (typeof item === 'function') {
+
+				if (!allowFunctions) {
+					throw new TypeError('Unexpected function.');
+				}
+
 				item = item(context);
 				if (item.then) {
 					throw new TypeError('Async config functions are not supported.');
@@ -98,6 +120,11 @@ function normalizeSync(items, context) {
 			}
 
 			if (Array.isArray(item)) {
+
+				if (!allowArrays) {
+					throw new TypeError('Unexpected array.');
+				}
+
 				yield * flatTraverse(item);
 			} else if (typeof item === 'function') {
 				throw new TypeError('A config function can only return an object or array.');
@@ -180,6 +207,24 @@ function assertNormalized(configArray) {
 	}
 }
 
+/**
+ * Ensures that config types are valid.
+ * @param {Array<string>} extraConfigTypes The config types to check.
+ * @returns {void}
+ * @throws {Error} When the config types array is invalid.
+ */
+function assertExtraConfigTypes(extraConfigTypes) {
+	if (extraConfigTypes.length > 2) {
+		throw new TypeError('configTypes must be an array with at most two items.');
+	}
+
+	for (const configType of extraConfigTypes) {
+		if (!CONFIG_TYPES.has(configType)) {
+			throw new TypeError(`Unexpected config type "${configType}" found. Expected one of: "object", "array", "function".`);
+		}
+	}
+}
+
 //------------------------------------------------------------------------------
 // Public Interface
 //------------------------------------------------------------------------------
@@ -207,66 +252,83 @@ export class ConfigArray extends Array {
 	 *      configs have already been normalized.
 	 * @param {Object} [options.schema] The additional schema 
 	 *      definitions to use for the ConfigArray schema.
+	 * @param {Array<string>} [options.configTypes] List of config types supported.
 	 */
-	constructor(configs, { basePath = '', normalized = false, schema: customSchema } = {}) {
+	constructor(configs,
+	{
+		basePath = '',
+		normalized = false,
+		schema: customSchema,
+		extraConfigTypes = []
+	} = {}
+) {
 		super();
 
 		/**
-		 * Tracks if the array has been normalized.
-		 * @property isNormalized
-		 * @type boolean
-		 * @private
-		 */
+	 * Tracks if the array has been normalized.
+	 * @property isNormalized
+	 * @type boolean
+	 * @private
+	 */
 		this[ConfigArraySymbol.isNormalized] = normalized;
 
 		/**
-		 * The schema used for validating and merging configs.
-		 * @property schema
-		 * @type ObjectSchema
-		 * @private
-		 */
+	 * The schema used for validating and merging configs.
+	 * @property schema
+	 * @type ObjectSchema
+	 * @private
+	 */
 		this[ConfigArraySymbol.schema] = new ObjectSchema({
 			...customSchema,
 			...baseSchema
 		});
 
 		/**
-		 * The path of the config file that this array was loaded from.
-		 * This is used to calculate filename matches.
-		 * @property basePath
-		 * @type string
-		 */
+	 * The path of the config file that this array was loaded from.
+	 * This is used to calculate filename matches.
+	 * @property basePath
+	 * @type string
+	 */
 		this.basePath = basePath;
 
+		assertExtraConfigTypes(extraConfigTypes);
+
 		/**
-		 * A cache to store calculated configs for faster repeat lookup.
-		 * @property configCache
-		 * @type Map
-		 * @private
-		 */
+	 * The supported config types.
+	 * @property configTypes
+	 * @type Array<string>
+	 */
+		this.extraConfigTypes = Object.freeze([...extraConfigTypes]);
+
+		/**
+	 * A cache to store calculated configs for faster repeat lookup.
+	 * @property configCache
+	 * @type Map
+	 * @private
+	 */
 		this[ConfigArraySymbol.configCache] = new Map();
 
 		// load the configs into this array
 		if (Array.isArray(configs)) {
-			this.push(...configs);
+		this.push(...configs);
 		} else {
-			this.push(configs);
+		this.push(configs);
 		}
 
 	}
 
-	/**
+/**
 	 * Prevent normal array methods from creating a new `ConfigArray` instance.
 	 * This is to ensure that methods such as `slice()` won't try to create a 
 	 * new instance of `ConfigArray` behind the scenes as doing so may throw
 	 * an error due to the different constructor signature.
 	 * @returns {Function} The `Array` constructor.
 	 */
-	static get [Symbol.species]() {
-		return Array;
-	}
+static get [Symbol.species]() {
+	return Array;
+}
 
-	/**
+/**
 	 * Returns the `files` globs from every config object in the array.
 	 * Negated patterns (those beginning with `!`) are not returned.
 	 * This can be used to determine which files will be matched by a
@@ -274,113 +336,113 @@ export class ConfigArray extends Array {
 	 * for a command line interface.
 	 * @returns {string[]} An array of string patterns.
 	 */
-	get files() {
+get files() {
 
-		assertNormalized(this);
+	assertNormalized(this);
 
-		const result = [];
+	const result = [];
 
-		for (const config of this) {
-			if (config.files) {
-				config.files.forEach(filePattern => {
-					if (Array.isArray(filePattern)) {
-						result.push(...filePattern.filter(pattern => {
-							return isString(pattern) && !pattern.startsWith('!');
-						}));
-					} else if (isString(filePattern) && !filePattern.startsWith('!')) {
-						result.push(filePattern);
-					}
-				});
-			}
+	for (const config of this) {
+		if (config.files) {
+			config.files.forEach(filePattern => {
+				if (Array.isArray(filePattern)) {
+					result.push(...filePattern.filter(pattern => {
+						return isString(pattern) && !pattern.startsWith('!');
+					}));
+				} else if (isString(filePattern) && !filePattern.startsWith('!')) {
+					result.push(filePattern);
+				}
+			});
 		}
-
-		return result;
 	}
 
-	/**
+	return result;
+}
+
+/**
 	 * Returns the file globs that should always be ignored regardless of
 	 * the matching `files` fields in any configs. This is necessary to mimic
 	 * the behavior of things like .gitignore and .eslintignore, allowing a
 	 * globbing operation to be faster.
 	 * @returns {string[]} An array of string patterns to be ignored.
 	 */
-	get ignores() {
+get ignores() {
 
-		assertNormalized(this);
+	assertNormalized(this);
 
-		const result = [];
+	const result = [];
 
-		for (const config of this) {
-			if (config.ignores && !config.files) {
-				result.push(...config.ignores.filter(isString));
-			}
+	for (const config of this) {
+		if (config.ignores && !config.files) {
+			result.push(...config.ignores.filter(isString));
 		}
-
-		return result;
 	}
 
-	/**
+	return result;
+}
+
+/**
 	 * Indicates if the config array has been normalized.
 	 * @returns {boolean} True if the config array is normalized, false if not.
 	 */
-	isNormalized() {
-		return this[ConfigArraySymbol.isNormalized];
-	}
+isNormalized() {
+	return this[ConfigArraySymbol.isNormalized];
+}
 
-	/**
+/**
 	 * Normalizes a config array by flattening embedded arrays and executing
 	 * config functions.
 	 * @param {ConfigContext} context The context object for config functions.
 	 * @returns {Promise<ConfigArray>} The current ConfigArray instance.
 	 */
-	async normalize(context = {}) {
+async normalize(context = {}) {
 
-		if (!this.isNormalized()) {
-			const normalizedConfigs = await normalize(this, context);
-			this.length = 0;
-			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
-			this[ConfigArraySymbol.isNormalized] = true;
+	if (!this.isNormalized()) {
+		const normalizedConfigs = await normalize(this, context, this.extraConfigTypes);
+		this.length = 0;
+		this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
+		this[ConfigArraySymbol.isNormalized] = true;
 
-			// prevent further changes
-			Object.freeze(this);
-		}
-
-		return this;
+		// prevent further changes
+		Object.freeze(this);
 	}
 
-	/**
+	return this;
+}
+
+/**
 	 * Normalizes a config array by flattening embedded arrays and executing
 	 * config functions.
 	 * @param {ConfigContext} context The context object for config functions.
 	 * @returns {ConfigArray} The current ConfigArray instance.
 	 */
-	normalizeSync(context = {}) {
+normalizeSync(context = {}) {
 
-		if (!this.isNormalized()) {
-			const normalizedConfigs = normalizeSync(this, context);
-			this.length = 0;
-			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
-			this[ConfigArraySymbol.isNormalized] = true;
+	if (!this.isNormalized()) {
+		const normalizedConfigs = normalizeSync(this, context, this.extraConfigTypes);
+		this.length = 0;
+		this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
+		this[ConfigArraySymbol.isNormalized] = true;
 
-			// prevent further changes
-			Object.freeze(this);
-		}
-
-		return this;
+		// prevent further changes
+		Object.freeze(this);
 	}
 
-	/**
+	return this;
+}
+
+/**
 	 * Finalizes the state of a config before being cached and returned by
 	 * `getConfig()`. Does nothing by default but is provided to be
 	 * overridden by subclasses as necessary.
 	 * @param {Object} config The config to finalize.
 	 * @returns {Object} The finalized config.
 	 */
-	[ConfigArraySymbol.finalizeConfig](config) {
-		return config;
-	}
+[ConfigArraySymbol.finalizeConfig](config) {
+	return config;
+}
 
-	/**
+/**
 	 * Preprocesses a config during the normalization process. This is the
 	 * method to override if you want to convert an array item before it is
 	 * validated for the first time. For example, if you want to replace a
@@ -388,48 +450,48 @@ export class ConfigArray extends Array {
 	 * @param {Object} config The config to preprocess.
 	 * @returns {Object} The config to use in place of the argument.
 	 */
-	[ConfigArraySymbol.preprocessConfig](config) {
-		return config;
-	}
+[ConfigArraySymbol.preprocessConfig](config) {
+	return config;
+}
 
-	/**
+/**
 	 * Returns the config object for a given file path.
 	 * @param {string} filePath The complete path of a file to get a config for.
 	 * @returns {Object} The config object for this file.
 	 */
-	getConfig(filePath) {
+getConfig(filePath) {
 
-		assertNormalized(this);
+	assertNormalized(this);
 
-		// first check the cache to avoid duplicate work
-		let finalConfig = this[ConfigArraySymbol.configCache].get(filePath);
+	// first check the cache to avoid duplicate work
+	let finalConfig = this[ConfigArraySymbol.configCache].get(filePath);
 
-		if (finalConfig) {
-			return finalConfig;
-		}
-
-		// No config found in cache, so calculate a new one
-
-		const matchingConfigs = [];
-
-		for (const config of this) {
-			if (pathMatches(filePath, this.basePath, config)) {
-				debug(`Matching config found for ${filePath}`);
-				matchingConfigs.push(config);
-			} else {
-				debug(`No matching config found for ${filePath}`);
-			}
-		}
-
-		finalConfig = matchingConfigs.reduce((result, config) => {
-			return this[ConfigArraySymbol.schema].merge(result, config);
-		}, {}, this);
-
-		finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
-
-		this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
-
+	if (finalConfig) {
 		return finalConfig;
 	}
+
+	// No config found in cache, so calculate a new one
+
+	const matchingConfigs = [];
+
+	for (const config of this) {
+		if (pathMatches(filePath, this.basePath, config)) {
+			debug(`Matching config found for ${filePath}`);
+			matchingConfigs.push(config);
+		} else {
+			debug(`No matching config found for ${filePath}`);
+		}
+	}
+
+	finalConfig = matchingConfigs.reduce((result, config) => {
+		return this[ConfigArraySymbol.schema].merge(result, config);
+	}, {}, this);
+
+	finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
+
+	this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+
+	return finalConfig;
+}
 
 }

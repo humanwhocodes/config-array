@@ -143,6 +143,7 @@ function createConfigArray(options) {
 	], {
 		basePath,
 		schema,
+		extraConfigTypes: ['array', 'function'],
 		...options
 	});
 }
@@ -157,11 +158,130 @@ describe('ConfigArray', () => {
 		unnormalizedConfigs;
 
 	beforeEach(() => {
-		unnormalizedConfigs = new ConfigArray([], { basePath });
+		unnormalizedConfigs = new ConfigArray([], { basePath, extraConfigTypes: ['array', 'function'] });
 		configs = createConfigArray();
 		return configs.normalize({
 			name: 'from-context'
 		});
+	});
+
+	describe('Config Types Validation', () => {
+		it('should not throw an error when objects are allowed', async () => {
+			configs = new ConfigArray([
+				{
+					files: '*.js'
+				}
+			], {
+				basePath
+			});
+			await configs.normalize();
+
+		});
+
+		it('should not throw an error when arrays are allowed', async () => {
+			configs = new ConfigArray([
+				[
+					{
+						files: '*.js'
+					}
+				]
+			], {
+				basePath,
+				extraConfigTypes: ['array']
+			});
+			await configs.normalize();
+
+		});
+
+		it('should not throw an error when functions are allowed', async () => {
+			configs = new ConfigArray([
+				() => ({})
+			], {
+				basePath,
+				extraConfigTypes: ['function']
+			});
+			await configs.normalize();
+
+		});
+
+		it('should throw an error in normalize() when arrays are not allowed', done => {
+
+			configs = new ConfigArray([
+				[
+					{
+						files: '*.js'
+					}
+				]
+			], {
+				basePath
+			});
+
+			configs
+				.normalize()
+				.then(() => {
+					throw new Error('Missing error.');
+				})
+				.catch(ex => {
+					expect(ex).matches(/Unexpected array/);
+					done();
+				});
+
+		});
+
+		it('should throw an error in normalizeSync() when arrays are not allowed', () => {
+
+			configs = new ConfigArray([
+				[
+					{
+						files: '*.js'
+					}
+				]
+			], {
+				basePath
+			});
+
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.throws(/Unexpected array/);
+
+		});
+
+		it('should throw an error in normalize() when functions are not allowed', done => {
+
+			configs = new ConfigArray([
+				() => ({})
+			], {
+				basePath
+			});
+
+			configs
+				.normalize()
+				.then(() => {
+					throw new Error('Missing error.');
+				})
+				.catch(ex => {
+					expect(ex).matches(/Unexpected function/);
+					done();
+				});
+
+		});
+
+		it('should throw an error in normalizeSync() when functions are not allowed', () => {
+
+			configs = new ConfigArray([
+				() => {}
+			], {
+				basePath
+			});
+
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.throws(/Unexpected function/);
+
+		});
+
 	});
 
 	describe('Validation', () => {
