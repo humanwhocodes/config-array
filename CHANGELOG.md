@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://www.github.com/humanwhocodes/config-array/compare/v0.7.0...v0.8.0) (2021-10-01)
+
+
+### Features
+
+* Add isIgnored() method ([343e5a0](https://www.github.com/humanwhocodes/config-array/commit/343e5a0a9e32028bfc6c0bf1ec0c6badf74f47f9))
+
+
+### Bug Fixes
+
+* Ensure global ignores are honored ([343e5a0](https://www.github.com/humanwhocodes/config-array/commit/343e5a0a9e32028bfc6c0bf1ec0c6badf74f47f9))
+
 ## [0.7.0](https://www.github.com/humanwhocodes/config-array/compare/v0.6.0...v0.7.0) (2021-09-24)
 
 
