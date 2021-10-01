@@ -446,14 +446,12 @@ describe('ConfigArray', () => {
 				expect(config.defs.ignored).to.equal('.gitignore');
 			});
 
-			it('should calculate correct config when passed .gitignore filename', () => {
+			it('should return empty config when passed .gitignore filename', () => {
 				const filename = path.resolve(basePath, '.gitignore');
 
 				const config = configs.getConfig(filename);
 
-				expect(config.defs).to.be.an('object');
-				expect(config.defs.name).to.equal('config-array');
-				expect(config.defs.ignored).to.equal('.gitignore');
+				expect(Object.keys(config).length).to.equal(0, 'Config should be empty');
 			});
 
 			it('should calculate correct config when passed JS filename that matches two configs', () => {
@@ -570,6 +568,63 @@ describe('ConfigArray', () => {
 				expect(config1).to.equal(config2);
 			});
 
+			it('should return empty config when called with ignored filename', () => {
+				const filename = path.resolve(basePath, 'node_modules/foo.js');
+				const config = configs.getConfig(filename);
+
+				expect(Object.keys(config).length).to.equal(0, 'Config should be empty');
+			});
+
+		});
+
+		describe('isIgnored()', () => {
+
+			it('should throw an error when not normalized', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(() => {
+					unnormalizedConfigs.isIgnored(filename);
+				})
+					.to
+					.throw(/normalized/);
+			});
+
+			it('should return false when passed JS filename', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(configs.isIgnored(filename)).to.be.false;
+			});
+
+			it('should return false when passed HTML filename', () => {
+				const filename = path.resolve(basePath, 'foo.html');
+
+				expect(configs.isIgnored(filename)).to.be.false;
+			});
+
+			it('should return false when passed .gitignore filename', () => {
+				const filename = path.resolve(basePath, '.gitignore');
+
+				expect(configs.isIgnored(filename)).to.be.true;
+			});
+
+			it('should return false when passed CSS filename', () => {
+				const filename = path.resolve(basePath, 'foo.css');
+
+				expect(configs.isIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed docx filename', () => {
+				const filename = path.resolve(basePath, 'sss.docx');
+
+				expect(configs.isIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed node_modules filename', () => {
+				const filename = path.resolve(basePath, 'node_modules/foo.js');
+
+				expect(configs.isIgnored(filename)).to.be.true;
+			});
+
 		});
 
 		describe('files', () => {
@@ -585,17 +640,7 @@ describe('ConfigArray', () => {
 			it('should return all string pattern file from all configs when called', () => {
 				const expectedFiles = configs.reduce((list, config) => {
 					if (config.files) {
-						config.files.forEach(filePatterns => {
-							if (Array.isArray(filePatterns)) {
-								list.push(...filePatterns.filter(pattern => {
-									return typeof pattern === 'string' && !pattern.startsWith('!');
-								}));
-							} else if (typeof filePatterns !== 'function') {
-								if (!filePatterns.startsWith('!')) {
-									list.push(filePatterns);
-								}
-							}
-						});
+						list.push(...config.files);
 					}
 
 					return list;
@@ -619,7 +664,7 @@ describe('ConfigArray', () => {
 			it('should return all ignores from all configs without files when called', () => {
 				const expectedIgnores = configs.reduce((list, config) => {
 					if (config.ignores && !config.files) {
-						list.push(...config.ignores.filter(pattern => typeof pattern === 'string'));
+						list.push(...config.ignores);
 					}
 
 					return list;
