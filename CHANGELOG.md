@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://www.github.com/humanwhocodes/config-array/compare/v0.8.0...v0.9.0) (2021-10-04)
+
+
+### Features
+
+* getConfig() now returns undefined when no configs match. ([a563b82](https://www.github.com/humanwhocodes/config-array/commit/a563b8255d4eb2bb7745314e3f00ef53792b343f))
+
 ## [0.8.0](https://www.github.com/humanwhocodes/config-array/compare/v0.7.0...v0.8.0) (2021-10-01)
 
 
