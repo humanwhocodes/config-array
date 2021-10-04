@@ -520,12 +520,20 @@ export class ConfigArray extends Array {
 			return finalConfig;
 		}
 
-		// if there is a global matcher ignoring this file, just return
-		if (this.isIgnored(filePath)) {
-			return {};
+		// TODO: Maybe move elsewhere?
+		const relativeFilePath = path.relative(this.basePath, filePath);
+
+		// if there is a global matcher ignoring this file, just return null
+		for (const shouldIgnore of this.ignores) {
+			if (shouldIgnoreFilePath(shouldIgnore, filePath, relativeFilePath)) {
+
+				// cache and return result - finalConfig is undefined at this point
+				this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+				return finalConfig;
+			}
 		}
 
-		// No config found in cache, so calculate a new one
+		// filePath isn't automatically ignored, so try to construct config
 
 		const matchingConfigs = [];
 
@@ -537,6 +545,15 @@ export class ConfigArray extends Array {
 				debug(`No matching config found for ${filePath}`);
 			}
 		}
+		
+		// if matching both files and ignores, there will be no config to create
+		if (matchingConfigs.length === 0) {
+			// cache and return result - finalConfig is undefined at this point
+			this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+			return finalConfig;
+		}
+
+		// otherwise construct the config
 
 		finalConfig = matchingConfigs.reduce((result, config) => {
 			return this[ConfigArraySymbol.schema].merge(result, config);
@@ -556,17 +573,7 @@ export class ConfigArray extends Array {
 	 */
 	isIgnored(filePath) {
 
-		assertNormalized(this);
-
-		const relativeFilePath = path.relative(this.basePath, filePath);
-
-		for (const shouldIgnore of this.ignores) {
-			if (shouldIgnoreFilePath(shouldIgnore, filePath, relativeFilePath)) {
-				return true;
-			}
-		}
-
-		return false;
+		return this.getConfig(filePath) === undefined;
 	}
 
 }

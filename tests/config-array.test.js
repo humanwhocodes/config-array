@@ -84,6 +84,13 @@ function createConfigArray(options) {
 			}
 		},
 		{
+			files: ['**/*.xsl'],
+			ignores: ['fixtures/test.xsl'],
+			defs: {
+				xsl: true
+			}
+		},
+		{
 			ignores: ['tests/fixtures/**'],
 			defs: {
 				name: 'config-array'
@@ -446,12 +453,12 @@ describe('ConfigArray', () => {
 				expect(config.defs.ignored).to.equal('.gitignore');
 			});
 
-			it('should return empty config when passed .gitignore filename', () => {
+			it('should return undefined when passed ignored .gitignore filename', () => {
 				const filename = path.resolve(basePath, '.gitignore');
 
 				const config = configs.getConfig(filename);
 
-				expect(Object.keys(config).length).to.equal(0, 'Config should be empty');
+				expect(config).to.be.undefined;
 			});
 
 			it('should calculate correct config when passed JS filename that matches two configs', () => {
@@ -568,11 +575,11 @@ describe('ConfigArray', () => {
 				expect(config1).to.equal(config2);
 			});
 
-			it('should return empty config when called with ignored filename', () => {
+			it('should return empty config when called with ignored node_modules filename', () => {
 				const filename = path.resolve(basePath, 'node_modules/foo.js');
 				const config = configs.getConfig(filename);
 
-				expect(Object.keys(config).length).to.equal(0, 'Config should be empty');
+				expect(config).to.be.undefined;
 			});
 
 		});
@@ -601,7 +608,7 @@ describe('ConfigArray', () => {
 				expect(configs.isIgnored(filename)).to.be.false;
 			});
 
-			it('should return false when passed .gitignore filename', () => {
+			it('should return true when passed ignored .gitignore filename', () => {
 				const filename = path.resolve(basePath, '.gitignore');
 
 				expect(configs.isIgnored(filename)).to.be.true;
@@ -619,8 +626,25 @@ describe('ConfigArray', () => {
 				expect(configs.isIgnored(filename)).to.be.false;
 			});
 
-			it('should return true when passed node_modules filename', () => {
+			it('should return true when passed ignored node_modules filename', () => {
 				const filename = path.resolve(basePath, 'node_modules/foo.js');
+
+				expect(configs.isIgnored(filename)).to.be.true;
+			});
+
+			it('should return true when passed matching both files and ignores in a config', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.xsl'],
+						ignores: ['fixtures/test.xsl'],
+						defs: {
+							xsl: true
+						}
+					}
+				], { basePath });
+
+				configs.normalizeSync();
+				const filename = path.resolve(basePath, 'fixtures/test.xsl');
 
 				expect(configs.isIgnored(filename)).to.be.true;
 			});
