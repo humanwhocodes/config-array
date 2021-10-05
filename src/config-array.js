@@ -184,6 +184,7 @@ function pathMatches(filePath, basePath, config) {
 
 	// match both strings and functions
 	const match = pattern => {
+
 		if (isString(pattern)) {
 			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
 		}
@@ -572,7 +573,6 @@ export class ConfigArray extends Array {
 	 * @returns {boolean} True if the path is ignored, false if not.
 	 */
 	isIgnored(filePath) {
-
 		return this.getConfig(filePath) === undefined;
 	}
 
