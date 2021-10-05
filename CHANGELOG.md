@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.1](https://www.github.com/humanwhocodes/config-array/compare/v0.9.0...v0.9.1) (2021-10-05)
+
+
+### Bug Fixes
+
+* Properly build package for release ([168155f](https://www.github.com/humanwhocodes/config-array/commit/168155f3fed91ab35566c452efd28debf8ec2b85))
+
 ## [0.9.0](https://www.github.com/humanwhocodes/config-array/compare/v0.8.0...v0.9.0) (2021-10-04)
 
 
