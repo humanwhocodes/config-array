@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.2](https://www.github.com/humanwhocodes/config-array/compare/v0.9.1...v0.9.2) (2021-11-02)
+
+
+### Bug Fixes
+
+* Object merging error by upgrading object-schema ([377d06d](https://www.github.com/humanwhocodes/config-array/commit/377d06d2a44d781b0bec70b3389c48b3d5a63f94))
+
 ### [0.9.1](https://www.github.com/humanwhocodes/config-array/compare/v0.9.0...v0.9.1) (2021-10-05)
 
 
