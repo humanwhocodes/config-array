@@ -649,6 +649,36 @@ describe('ConfigArray', () => {
 				expect(configs.isIgnored(filename)).to.be.true;
 			});
 
+			it('should return false when negated pattern comes after matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/*.txt', '!foo.txt']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isIgnored(path.join(basePath, 'foo.txt'))).to.be.false;
+			});
+
+			it('should return true when negated pattern comes before matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['!foo.txt', '**/*.txt']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isIgnored(path.join(basePath, 'foo.txt'))).to.be.true;
+			});
+
 		});
 
 		describe('files', () => {
