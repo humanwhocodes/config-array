@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.4](https://www.github.com/humanwhocodes/config-array/compare/v0.9.3...v0.9.4) (2022-01-27)
+
+
+### Bug Fixes
+
+* Negated patterns to work when files match ([398c811](https://www.github.com/humanwhocodes/config-array/commit/398c8119d359493dc7b82b40df4d92ea6528375f))
+
 ### [0.9.3](https://www.github.com/humanwhocodes/config-array/compare/v0.9.2...v0.9.3) (2022-01-26)
 
 
