@@ -679,6 +679,22 @@ describe('ConfigArray', () => {
 				expect(configs.isIgnored(path.join(basePath, 'foo.txt'))).to.be.true;
 			});
 
+			it('should return false when matching files and ignores has a negated pattern comes after matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js'],
+						ignores: ['**/*.test.js', '!foo.test.js']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isIgnored(path.join(basePath, 'bar.test.js'))).to.be.true;
+				expect(configs.isIgnored(path.join(basePath, 'foo.test.js'))).to.be.false;
+			});
+
 		});
 
 		describe('files', () => {

@@ -230,10 +230,6 @@ function pathMatches(filePath, basePath, config) {
 		throw new TypeError(`Unexpected matcher type ${pattern}.`);
 	};
 
-	const isFilePathIgnored = matcher => {
-		return shouldIgnoreFilePath([matcher], filePath, relativeFilePath);
-	};
-
 	// check for all matches to config.files
 	let filePathMatchesPattern = config.files.some(pattern => {
 		if (Array.isArray(pattern)) {
@@ -248,7 +244,7 @@ function pathMatches(filePath, basePath, config) {
 	 * if there are any files to ignore.
 	 */
 	if (filePathMatchesPattern && config.ignores) {
-		filePathMatchesPattern = !config.ignores.some(isFilePathIgnored);
+		filePathMatchesPattern = !shouldIgnoreFilePath(config.ignores, filePath, relativeFilePath);
 	}
 
 	return filePathMatchesPattern;
