@@ -482,7 +482,7 @@ async normalize(context = {}) {
 	if (!this.isNormalized()) {
 		const normalizedConfigs = await normalize(this, context, this.extraConfigTypes);
 		this.length = 0;
-		this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
+		this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
 		this[ConfigArraySymbol.isNormalized] = true;
 
 		// prevent further changes
