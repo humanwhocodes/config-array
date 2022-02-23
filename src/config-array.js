@@ -21,7 +21,8 @@ import { baseSchema } from './base-schema.js';
 const debug = createDebug('@hwc/config-array');
 
 const MINIMATCH_OPTIONS = {
-	matchBase: true
+	matchBase: true,
+	dot: true
 };
 
 const CONFIG_TYPES = new Set(['array', 'function']);

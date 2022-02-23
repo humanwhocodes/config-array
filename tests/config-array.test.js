@@ -91,6 +91,12 @@ function createConfigArray(options) {
 			}
 		},
 		{
+			files: ['tests/**/*.xyz'],
+			defs: {
+				xyz: true
+			}
+		},
+		{
 			ignores: ['tests/fixtures/**'],
 			defs: {
 				name: 'config-array'
@@ -441,6 +447,16 @@ describe('ConfigArray', () => {
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('config-array');
 				expect(config.defs.css).to.be.false;
+			});
+
+			it('should calculate correct config when passed XYZ filename', () => {
+				const filename = path.resolve(basePath, 'tests/.bar/foo.xyz');
+
+				const config = configs.getConfig(filename);
+
+				expect(config.defs).to.be.an('object');
+				expect(config.defs.name).to.equal('config-array');
+				expect(config.defs.xyz).to.be.true;
 			});
 
 			it('should calculate correct config when passed HTML filename', () => {
