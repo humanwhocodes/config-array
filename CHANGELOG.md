@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.9.5](https://www.github.com/humanwhocodes/config-array/compare/v0.9.4...v0.9.5) (2022-02-23)
+
+
+### Bug Fixes
+
+* Ensure dot directories are matched correctly ([6e8d180](https://www.github.com/humanwhocodes/config-array/commit/6e8d180f43cedf3c2072d8a1229470e9fafabf5b))
+* preprocessConfig should have correct 'this' value ([9641540](https://www.github.com/humanwhocodes/config-array/commit/96415402cf0012ccf8e4af6c7b934dfc1a058986))
+
 ### [0.9.4](https://www.github.com/humanwhocodes/config-array/compare/v0.9.3...v0.9.4) (2022-01-27)
 
 
