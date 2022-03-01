@@ -740,6 +740,75 @@ describe('ConfigArray', () => {
 
 		});
 
+		describe('isExplicitMatch()', () => {
+
+			it('should throw an error when not normalized', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(() => {
+					unnormalizedConfigs.isExplicitMatch(filename);
+				})
+					.to
+					.throw(/normalized/);
+			});
+
+			it('should return true when passed JS filename', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(configs.isExplicitMatch(filename)).to.be.true;
+			});
+
+			it('should return true when passed HTML filename', () => {
+				const filename = path.resolve(basePath, 'foo.html');
+
+				expect(configs.isExplicitMatch(filename)).to.be.true;
+			});
+
+			it('should return true when passed CSS filename', () => {
+				const filename = path.resolve(basePath, 'foo.css');
+
+				expect(configs.isExplicitMatch(filename)).to.be.true;
+			});
+
+			it('should return true when passed EXE filename because it matches !.css', () => {
+				const filename = path.resolve(basePath, 'foo.exe');
+
+				expect(configs.isExplicitMatch(filename)).to.be.true;
+			});
+
+			it('should return false when passed EXE filename because no explicit matches', () => {
+				const filename = path.resolve(basePath, 'foo.exe');
+				configs = new ConfigArray([
+					{
+						files: ['*.js']
+					}
+				], {
+					basePath
+				});
+				configs.normalizeSync();
+
+				expect(configs.isExplicitMatch(filename)).to.be.false;
+			});
+
+			it('should return false when passed matching both files and ignores in a config', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.xsl'],
+						ignores: ['fixtures/test.xsl'],
+						defs: {
+							xsl: true
+						}
+					}
+				], { basePath });
+
+				configs.normalizeSync();
+				const filename = path.resolve(basePath, 'fixtures/test.xsl');
+
+				expect(configs.isExplicitMatch(filename)).to.be.false;
+			});
+
+		});
+
 		describe('files', () => {
 
 			it('should throw an error when not normalized', () => {
