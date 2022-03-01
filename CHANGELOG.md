@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://www.github.com/humanwhocodes/config-array/compare/v0.9.5...v0.10.0) (2022-03-01)
+
+
+### Features
+
+* Add isExplicitMatch() method ([9ecd90e](https://www.github.com/humanwhocodes/config-array/commit/9ecd90e2a3e984633f535daa4da3cbfb96964fdd))
+
 ### [0.9.5](https://www.github.com/humanwhocodes/config-array/compare/v0.9.4...v0.9.5) (2022-02-23)
 
 
