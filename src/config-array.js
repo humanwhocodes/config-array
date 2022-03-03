@@ -195,18 +195,10 @@ function shouldIgnoreFilePath(ignores, filePath, relativeFilePath) {
  * `ignores`.
  * @param {string} filePath The absolute file path to check.
  * @param {Object} config The config object to check.
- * @param {string} [mode="implicit"] When set to "implicit", any config
- * 		without a `files` property will match; when set to "explicit",
- * 		any config without a `files` property will not match.
  * @returns {boolean} True if the file path is matched by the config,
  *      false if not.
  */
-function pathMatches(filePath, basePath, config, mode = "implicit") {
-
-	// a config without `files` field always match implicitly
-	if (!config.files) {
-		return mode === "implicit";
-	}
+function pathMatches(filePath, basePath, config) {
 
 	/*
 	 * For both files and ignores, functions are passed the absolute
@@ -573,12 +565,15 @@ export class ConfigArray extends Array {
 		// filePath isn't automatically ignored, so try to find a match
 
 		for (const config of this) {
-			if (pathMatches(filePath, this.basePath, config, "explicit")) {
+
+			if (!config.files) {
+				continue;
+			}
+
+			if (pathMatches(filePath, this.basePath, config)) {
 				debug(`Matching config found for ${filePath}`);
 				cache.explicitMatches.set(filePath, true);
 				return true;
-			} else {
-				debug(`No matching config found for ${filePath}`);
 			}
 		}
 
@@ -615,18 +610,28 @@ export class ConfigArray extends Array {
 		// filePath isn't automatically ignored, so try to construct config
 
 		const matchingConfigs = [];
+		let matchFound = false;
 
 		for (const config of this) {
+
+			if (!config.files) {
+				debug(`Universal config found for ${filePath}`);
+				matchingConfigs.push(config);
+				continue;
+			}
+
 			if (pathMatches(filePath, this.basePath, config)) {
 				debug(`Matching config found for ${filePath}`);
 				matchingConfigs.push(config);
-			} else {
-				debug(`No matching config found for ${filePath}`);
+				matchFound = true;
+				continue;
 			}
 		}
-
+		
 		// if matching both files and ignores, there will be no config to create
-		if (matchingConfigs.length === 0) {
+		if (!matchFound) {
+			debug(`No matching configs found for ${filePath}`);
+
 			// cache and return result - finalConfig is undefined at this point
 			this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
 			return finalConfig;

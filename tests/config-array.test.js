@@ -526,6 +526,25 @@ describe('ConfigArray', () => {
 				expect(config.defs.css).to.be.false;
 			});
 
+			it('should not match a filename that doesn\'t explicitly match a files pattern', () => {
+				const matchingFilename = path.resolve(basePath, 'foo.js');
+				const notMatchingFilename = path.resolve(basePath, 'foo.md');
+				configs = new ConfigArray([
+					{},
+					{
+						files: ['**/*.js']
+					}
+				], { basePath, schema });
+
+				configs.normalizeSync();
+
+				const config1 = configs.getConfig(matchingFilename);
+				expect(config1).to.be.an('object');
+
+				const config2 = configs.getConfig(notMatchingFilename);
+				expect(config2).to.be.undefined;
+			});
+
 			it('should calculate correct config when passed JS filename that matches a async function config', () => {
 				const configs = createConfigArray();
 				configs.push(context => {
@@ -695,6 +714,7 @@ describe('ConfigArray', () => {
 			it('should return false when negated pattern comes after matching pattern', () => {
 				configs = new ConfigArray([
 					{
+						files: ['**/foo.*'],
 						ignores: ['**/*.txt', '!foo.txt']
 					}
 				], {
