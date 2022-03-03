@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.10.1](https://www.github.com/humanwhocodes/config-array/compare/v0.10.0...v0.10.1) (2022-03-03)
+
+
+### Bug Fixes
+
+* Explicit matching is required against files field ([ab4e428](https://www.github.com/humanwhocodes/config-array/commit/ab4e4282ecea994ef88d273dc47aa24bf3c6972e))
+
 ## [0.10.0](https://www.github.com/humanwhocodes/config-array/compare/v0.9.5...v0.10.0) (2022-03-01)
 
 
