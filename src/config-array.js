@@ -21,7 +21,7 @@ import { baseSchema } from './base-schema.js';
 const debug = createDebug('@hwc/config-array');
 
 const MINIMATCH_OPTIONS = {
-	matchBase: true,
+	// matchBase: true,
 	dot: true
 };
 
@@ -147,6 +147,11 @@ function normalizeSync(items, context, extraConfigTypes) {
  * @returns {boolean} True if the path should be ignored and false if not.
  */
 function shouldIgnoreFilePath(ignores, filePath, relativeFilePath) {
+
+	// all files outside of the basePath are ignored
+	if (relativeFilePath.startsWith("..")) {
+		return true;
+	}
 
 	let shouldIgnore = false;
 

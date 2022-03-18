@@ -307,7 +307,7 @@ describe('ConfigArray', () => {
 			await configs.normalize();
 
 			expect(() => {
-				configs.getConfig('foo.js');
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
 				.throw(/non-empty array/);
@@ -323,7 +323,7 @@ describe('ConfigArray', () => {
 			await configs.normalize();
 
 			expect(() => {
-				configs.getConfig('foo.js');
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
 				.throw(/non-empty array/);
@@ -662,6 +662,12 @@ describe('ConfigArray', () => {
 				const filename = path.resolve(basePath, 'foo.js');
 
 				expect(configs.isIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed JS filename in parent directory', () => {
+				const filename = path.resolve(basePath, '../foo.js');
+
+				expect(configs.isIgnored(filename)).to.be.true;
 			});
 
 			it('should return false when passed HTML filename', () => {
