@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.10.2](https://www.github.com/humanwhocodes/config-array/compare/v0.10.1...v0.10.2) (2022-03-18)
+
+
+### Bug Fixes
+
+* Files outside of basePath should be ignored ([fc4d7b2](https://www.github.com/humanwhocodes/config-array/commit/fc4d7b2e851959ab9ab84305f6c78c52e9cc2c3c))
+
 ### [0.10.1](https://www.github.com/humanwhocodes/config-array/compare/v0.10.0...v0.10.1) (2022-03-03)
 
 
