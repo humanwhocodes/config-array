@@ -502,7 +502,7 @@ export class ConfigArray extends Array {
 		if (!this.isNormalized()) {
 			const normalizedConfigs = normalizeSync(this, context, this.extraConfigTypes);
 			this.length = 0;
-			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig]));
+			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes

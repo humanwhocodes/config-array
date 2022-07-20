@@ -407,7 +407,7 @@ describe('ConfigArray', () => {
 				expect(config.defs.name).to.equal('foo:bar');
 			});
 
-			it('should have "this" inside of function be equal to config array', async () => {
+			it('should have "this" inside of function be equal to config array when calling normalize()', async () => {
 
 				configs = createConfigArray();
 				configs.push('foo:bar');
@@ -428,6 +428,33 @@ describe('ConfigArray', () => {
 				};
 
 				await configs.normalize({
+					name: 'from-context'
+				});
+
+				expect(internalThis).to.equal(configs);
+			});
+
+			it('should have "this" inside of function be equal to config array when calling normalizeSync()', async () => {
+
+				configs = createConfigArray();
+				configs.push('foo:bar');
+				let internalThis;
+
+				configs[ConfigArraySymbol.preprocessConfig] = function(config) {
+					internalThis = this;
+
+					if (config === 'foo:bar') {
+						return {
+							defs: {
+								name: 'foo:bar'
+							}
+						};
+					}
+
+					return config;
+				};
+
+				configs.normalizeSync({
 					name: 'from-context'
 				});
 
