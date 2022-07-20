@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.10.3](https://www.github.com/humanwhocodes/config-array/compare/v0.10.2...v0.10.3) (2022-07-20)
+
+
+### Bug Fixes
+
+* Ensure preprocess method has correct 'this' value. ([f86933a](https://www.github.com/humanwhocodes/config-array/commit/f86933a072e5a4069bab2c1ce284dedf0efa715d))
+
 ### [0.10.2](https://www.github.com/humanwhocodes/config-array/compare/v0.10.1...v0.10.2) (2022-03-18)
 
 
