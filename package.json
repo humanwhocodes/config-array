@@ -28,7 +28,6 @@
   },
   "lint-staged": {
     "*.js": [
-      "nitpik",
       "eslint --fix --ignore-pattern '!.eslintrc.js'"
     ]
   },
