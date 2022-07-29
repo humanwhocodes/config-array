@@ -176,7 +176,7 @@ If the `files` array contains an item that is an array of strings and functions,
 
 If a pattern in the files array begins with `!` then it excludes that pattern. In the preceding example, any filename that doesn't end with `.js` will automatically getting a `settings.js` property set to `false`.
 
-You can also specify an `ignores` key that will force files matching those patterns to not be included. If the `ignores` key is in a config object without a `files` key, then those ignores will always be applied; if the `ignores` key is in a config object with a `files` key, then those ignores are only applied when `files` matches. Here's an example:
+You can also specify an `ignores` key that will force files matching those patterns to not be included. If the `ignores` key is in a config object without any other keys, then those ignores will always be applied; otherwise those ignores act as exclusions. Here's an example:
 
 ```js
 export default [

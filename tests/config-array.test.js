@@ -148,10 +148,7 @@ function createConfigArray(options) {
 			}
 		},
 		{
-			ignores: [filePath => filePath.endsWith('.gitignore')],
-			defs: {
-				ignored: '.gitignore'
-			}
+			ignores: [filePath => filePath.endsWith('.gitignore')]
 		}
 	], {
 		basePath,
@@ -520,7 +517,6 @@ describe('ConfigArray', () => {
 
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('HTML');
-				expect(config.defs.ignored).to.equal('.gitignore');
 			});
 
 			it('should return undefined when passed ignored .gitignore filename', () => {
@@ -898,7 +894,7 @@ describe('ConfigArray', () => {
 
 			it('should return all ignores from all configs without files when called', () => {
 				const expectedIgnores = configs.reduce((list, config) => {
-					if (config.ignores && !config.files) {
+					if (config.ignores && Object.keys(config).length === 1) {
 						list.push(...config.ignores);
 					}
 
