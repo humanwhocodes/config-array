@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.10.4](https://www.github.com/humanwhocodes/config-array/compare/v0.10.3...v0.10.4) (2022-07-29)
+
+
+### Bug Fixes
+
+* Global ignores only when no other keys ([1f6b6ae](https://www.github.com/humanwhocodes/config-array/commit/1f6b6ae89152c1ebe118f55e7ea05c37e7c960dc))
+* Re-introduce ignores fixes ([b3ec560](https://www.github.com/humanwhocodes/config-array/commit/b3ec560c485bec2f7420fd63a939448b49a073e3))
+
 ### [0.10.3](https://www.github.com/humanwhocodes/config-array/compare/v0.10.2...v0.10.3) (2022-07-20)
 
 
