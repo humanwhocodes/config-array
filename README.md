@@ -74,11 +74,11 @@ const configs = new ConfigArray(rawConfigs, {
 });
 ```
 
-This example reads in an object or array from `my.config.js` and passes it into the `ConfigArray` constructor as the first argument. The second argument is an object specifying the `basePath` (the directoy in which `my.config.js` is found) and a `schema` to define the additional properties of a config object beyond `files`, `ignores`, and `name`.
+This example reads in an object or array from `my.config.js` and passes it into the `ConfigArray` constructor as the first argument. The second argument is an object specifying the `basePath` (the directory in which `my.config.js` is found) and a `schema` to define the additional properties of a config object beyond `files`, `ignores`, and `name`.
 
 ### Specifying a Schema
 
-The `schema` option is required for you to use additional properties in config objects. The schema is object that follows the format of an [`ObjectSchema`](https://npmjs.com/package/@humanwhocodes/object-schema). The schema specifies both validation and merge rules that the `ConfigArray` instance needs to combine configs when there are multiple matches. Here's an example:
+The `schema` option is required for you to use additional properties in config objects. The schema is an object that follows the format of an [`ObjectSchema`](https://npmjs.com/package/@humanwhocodes/object-schema). The schema specifies both validation and merge rules that the `ConfigArray` instance needs to combine configs when there are multiple matches. Here's an example:
 
 ```js
 const configFilename = path.resolve(process.cwd(), "my.config.js");
@@ -174,7 +174,7 @@ If the `files` array contains a function, then that function is called with the 
 
 If the `files` array contains an item that is an array of strings and functions, then all patterns must match in order for the config to match. In the preceding examples, both `*.test.*` and `*.js` must match in order for the config object to be used.
 
-If a pattern in the files array begins with `!` then it excludes that pattern. In the preceding example, any filename that doesn't end with `.js` will automatically getting a `settings.js` property set to `false`.
+If a pattern in the files array begins with `!` then it excludes that pattern. In the preceding example, any filename that doesn't end with `.js` will automatically get a `settings.js` property set to `false`.
 
 You can also specify an `ignores` key that will force files matching those patterns to not be included. If the `ignores` key is in a config object without any other keys, then those ignores will always be applied; otherwise those ignores act as exclusions. Here's an example:
 
