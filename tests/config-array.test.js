@@ -651,11 +651,21 @@ describe('ConfigArray', () => {
 				expect(config.defs.css).to.be.false;
 			});
 
-			it('should return the same config when called with the same filename twice', () => {
+			it('should return the same config when called with the same filename twice (caching)', () => {
 				const filename = path.resolve(basePath, 'foo.js');
 
 				const config1 = configs.getConfig(filename);
 				const config2 = configs.getConfig(filename);
+
+				expect(config1).to.equal(config2);
+			});
+
+			it('should return the same config when called with two filenames that match the same configs (caching)', () => {
+				const filename1 = path.resolve(basePath, 'foo1.js');
+				const filename2 = path.resolve(basePath, 'foo2.js');
+
+				const config1 = configs.getConfig(filename1);
+				const config2 = configs.getConfig(filename2);
 
 				expect(config1).to.equal(config2);
 			});
