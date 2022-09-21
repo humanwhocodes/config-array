@@ -315,56 +315,55 @@ export class ConfigArray extends Array {
 	 * @param {Array<string>} [options.configTypes] List of config types supported.
 	 */
 	constructor(configs, {
-		basePath = '',
-		normalized = false,
-		schema: customSchema,
-		extraConfigTypes = []
-	} = {}
+			basePath = '',
+			normalized = false,
+			schema: customSchema,
+			extraConfigTypes = []
+		} = {}
 	) {
 		super();
 
 		/**
-	 * Tracks if the array has been normalized.
-	 * @property isNormalized
-	 * @type boolean
-	 * @private
-	 */
+		 * Tracks if the array has been normalized.
+		 * @property isNormalized
+		 * @type boolean
+		 * @private
+		 */
 		this[ConfigArraySymbol.isNormalized] = normalized;
 
 		/**
-	 * The schema used for validating and merging configs.
-	 * @property schema
-	 * @type ObjectSchema
-	 * @private
-	 */
-		this[ConfigArraySymbol.schema] = new ObjectSchema({
-			...customSchema,
-			...baseSchema
-		});
+		 * The schema used for validating and merging configs.
+		 * @property schema
+		 * @type ObjectSchema
+		 * @private
+		 */
+		this[ConfigArraySymbol.schema] = new ObjectSchema(
+			Object.assign({}, customSchema, baseSchema)
+		);
 
 		/**
-	 * The path of the config file that this array was loaded from.
-	 * This is used to calculate filename matches.
-	 * @property basePath
-	 * @type string
-	 */
+		 * The path of the config file that this array was loaded from.
+		 * This is used to calculate filename matches.
+		 * @property basePath
+		 * @type string
+		 */
 		this.basePath = basePath;
 
 		assertExtraConfigTypes(extraConfigTypes);
 
 		/**
-	 * The supported config types.
-	 * @property configTypes
-	 * @type Array<string>
-	 */
+		 * The supported config types.
+		 * @property configTypes
+		 * @type Array<string>
+		 */
 		this.extraConfigTypes = Object.freeze([...extraConfigTypes]);
 
 		/**
-	 * A cache to store calculated configs for faster repeat lookup.
-	 * @property configCache
-	 * @type Map
-	 * @private
-	 */
+		 * A cache to store calculated configs for faster repeat lookup.
+		 * @property configCache
+		 * @type Map
+		 * @private
+		 */
 		this[ConfigArraySymbol.configCache] = new Map();
 
 		// init cache
@@ -600,12 +599,16 @@ export class ConfigArray extends Array {
 
 		assertNormalized(this);
 
-		// first check the cache to avoid duplicate work
-		let finalConfig = this[ConfigArraySymbol.configCache].get(filePath);
+		const cache = this[ConfigArraySymbol.configCache];
+
+		// first check the cache for a filename match to avoid duplicate work
+		let finalConfig = cache.get(filePath);
 
 		if (finalConfig) {
 			return finalConfig;
 		}
+
+		// next check to see if the file should be ignored
 
 		// TODO: Maybe move elsewhere?
 		const relativeFilePath = path.relative(this.basePath, filePath);
@@ -614,49 +617,62 @@ export class ConfigArray extends Array {
 			debug(`Ignoring ${filePath}`);
 
 			// cache and return result - finalConfig is undefined at this point
-			this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+			cache.set(filePath, finalConfig);
 			return finalConfig;
 		}
 
 		// filePath isn't automatically ignored, so try to construct config
 
-		const matchingConfigs = [];
+		const matchingConfigIndices = [];
 		let matchFound = false;
 
-		for (const config of this) {
+		this.forEach((config, index) => {
 
 			if (!config.files) {
 				debug(`Universal config found for ${filePath}`);
-				matchingConfigs.push(config);
-				continue;
+				matchingConfigIndices.push(index);
+				return;
 			}
 
 			if (pathMatches(filePath, this.basePath, config)) {
 				debug(`Matching config found for ${filePath}`);
-				matchingConfigs.push(config);
+				matchingConfigIndices.push(index);
 				matchFound = true;
-				continue;
+				return;
 			}
-		}
+
+		});
 
 		// if matching both files and ignores, there will be no config to create
 		if (!matchFound) {
 			debug(`No matching configs found for ${filePath}`);
 
 			// cache and return result - finalConfig is undefined at this point
-			this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+			cache.set(filePath, finalConfig);
+			return finalConfig;
+		}
+
+		// check to see if there is a config cached by indices
+		finalConfig = cache.get(matchingConfigIndices.toString());
+
+		if (finalConfig) {
+
+			// also store for filename for faster lookup next time
+			cache.set(filePath, finalConfig);
+
 			return finalConfig;
 		}
 
 		// otherwise construct the config
 
-		finalConfig = matchingConfigs.reduce((result, config) => {
-			return this[ConfigArraySymbol.schema].merge(result, config);
+		finalConfig = matchingConfigIndices.reduce((result, index) => {
+			return this[ConfigArraySymbol.schema].merge(result, this[index]);
 		}, {}, this);
 
 		finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
 
-		this[ConfigArraySymbol.configCache].set(filePath, finalConfig);
+		cache.set(filePath, finalConfig);
+		cache.set(matchingConfigIndices.toString(), finalConfig);
 
 		return finalConfig;
 	}

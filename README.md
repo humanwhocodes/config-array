@@ -290,6 +290,13 @@ A few things to keep in mind:
 * The config array caches configs, so subsequent calls to `getConfig()` with the same filename will return in a fast lookup rather than another calculation.
 * A config will only be generated if the filename matches an entry in a `files` key. A config will not be generated without matching a `files` key (configs without a `files` key are only applied when another config with a `files` key is applied; configs without `files` are never applied on their own).
 
+## Caching Mechanisms
+
+Each `ConfigArray` aggressively caches configuration objects to avoid unnecessary work. This caching occurs in two ways:
+
+1. **File-based Caching.** For each filename that is passed into a method, the resulting config is cached against that filename so you're always guaranteed to get the same object returned from `getConfig()` whenever you pass the same filename in.
+2. **Index-based Caching.** Whenever a config is calculated, the config elements that were used to create the config are also cached. So if a given filename matches elements 1, 5, and 7, the resulting config is cached with a key of `1,5,7`. That way, if another file is passed that matches the same config elements, the result is already known and doesn't have to be recalculated. That means two files that match all the same elements will return the same config from `getConfig()`.
+
 ## Acknowledgements
 
 The design of this project was influenced by feedback on the ESLint RFC, and incorporates ideas from:
