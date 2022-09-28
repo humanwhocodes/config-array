@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.6](https://github.com/humanwhocodes/config-array/compare/v0.10.5...v0.10.6) (2022-09-28)
+
+
+### Performance Improvements
+
+* Cache Minimatch instances ([5cf9af7](https://github.com/humanwhocodes/config-array/commit/5cf9af7ecaf227d2106be0cebd92d7f5148867e6))
+
 ## [0.10.5](https://github.com/humanwhocodes/config-array/compare/v0.10.4...v0.10.5) (2022-09-21)
 
 
