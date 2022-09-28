@@ -18,6 +18,8 @@ import { baseSchema } from './base-schema.js';
 // Helpers
 //------------------------------------------------------------------------------
 
+const Minimatch = minimatch.Minimatch;
+const minimatchCache = new Map();
 const debug = createDebug('@hwc/config-array');
 
 const MINIMATCH_OPTIONS = {
@@ -34,6 +36,26 @@ const CONFIG_TYPES = new Set(['array', 'function']);
  */
 function isString(value) {
 	return typeof value === 'string';
+}
+
+/**
+ * Wrapper around minimatch that caches minimatch patterns for
+ * faster matching speed over multiple file path evaluations.
+ * @param {string} filepath The file path to match.
+ * @param {string} pattern The glob pattern to match against.
+ * @param {object} options The minimatch options to use.
+ * @returns 
+ */
+function doMatch(filepath, pattern, options) {
+
+	let matcher = minimatchCache.get(pattern);
+
+	if (!matcher) {
+		matcher = new Minimatch(pattern, options);
+		minimatchCache.set(pattern, matcher);
+	}
+
+	return matcher.match(filepath);
 }
 
 /**
@@ -178,14 +200,14 @@ function shouldIgnoreFilePath(ignores, filePath, relativeFilePath) {
 			 * would already be ignored.
 			 */
 			if (shouldIgnore &&
-				minimatch(relativeFilePath, matcher, {
+				doMatch(relativeFilePath, matcher, {
 					...MINIMATCH_OPTIONS,
 					flipNegate: true
 				})) {
 				return false;
 			}
 		} else {
-			shouldIgnore = shouldIgnore || minimatch(relativeFilePath, matcher, MINIMATCH_OPTIONS);
+			shouldIgnore = shouldIgnore || doMatch(relativeFilePath, matcher, MINIMATCH_OPTIONS);
 		}
 
 	}
@@ -221,7 +243,7 @@ function pathMatches(filePath, basePath, config) {
 	const match = pattern => {
 
 		if (isString(pattern)) {
-			return minimatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+			return doMatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
 		}
 
 		if (typeof pattern === 'function') {
@@ -367,7 +389,9 @@ export class ConfigArray extends Array {
 		this[ConfigArraySymbol.configCache] = new Map();
 
 		// init cache
-		dataCache.set(this, { explicitMatches: new Map() });
+		dataCache.set(this, {
+			explicitMatches: new Map()
+		});
 
 		// load the configs into this array
 		if (Array.isArray(configs)) {
