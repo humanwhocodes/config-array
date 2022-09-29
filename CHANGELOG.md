@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.7](https://github.com/humanwhocodes/config-array/compare/v0.10.6...v0.10.7) (2022-09-29)
+
+
+### Bug Fixes
+
+* Cache negated patterns separately ([fef617b](https://github.com/humanwhocodes/config-array/commit/fef617b6999f9a4b5871d4525c82c4181bc96fb7))
+
 ## [0.10.6](https://github.com/humanwhocodes/config-array/compare/v0.10.5...v0.10.6) (2022-09-28)
 
 
