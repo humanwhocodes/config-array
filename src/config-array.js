@@ -20,6 +20,7 @@ import { baseSchema } from './base-schema.js';
 
 const Minimatch = minimatch.Minimatch;
 const minimatchCache = new Map();
+const negatedMinimatchCache = new Map();
 const debug = createDebug('@hwc/config-array');
 
 const MINIMATCH_OPTIONS = {
@@ -48,11 +49,17 @@ function isString(value) {
  */
 function doMatch(filepath, pattern, options) {
 
-	let matcher = minimatchCache.get(pattern);
+	let cache = minimatchCache;
+
+	if (options.flipNegate) {
+		cache = negatedMinimatchCache;
+	}
+
+	let matcher = cache.get(pattern);
 
 	if (!matcher) {
 		matcher = new Minimatch(pattern, options);
-		minimatchCache.set(pattern, matcher);
+		cache.set(pattern, matcher);
 	}
 
 	return matcher.match(filepath);
