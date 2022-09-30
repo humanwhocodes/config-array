@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/humanwhocodes/config-array/compare/v0.11.0...v0.11.1) (2022-09-30)
+
+
+### Bug Fixes
+
+* isDirectoryIgnored should not test negated patterns ([f6cdb68](https://github.com/humanwhocodes/config-array/commit/f6cdb688784901970fda72eb688eb1a00c44b09a))
+
 ## [0.11.0](https://github.com/humanwhocodes/config-array/compare/v0.10.7...v0.11.0) (2022-09-30)
 
 
