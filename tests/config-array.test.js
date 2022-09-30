@@ -1000,6 +1000,36 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/"), "Trailing slash").to.be.false;
 			});
 
+			it("should return true and not check negated pattern when there is a negated pattern", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/foo/', '!**/node_modules']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo'))).to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo') + "/"), "Trailing slash").to.be.true;
+			});
+
+			it("should return false and not check negated pattern when there is a negated pattern", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/foo/', '!**/node_modules']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'bar'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'bar') + "/"), "Trailing slash").to.be.false;
+			});
+
 		});
 
 		describe('isExplicitMatch()', () => {

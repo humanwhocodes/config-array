@@ -747,6 +747,11 @@ export class ConfigArray extends Array {
 				return matcher(normalizedDirectoryPath);
 			}
 
+			// skip negated patterns because you can't unignore directories
+			if (matcher.startsWith("!")) {
+				return false;
+			}
+
 			// patterns ending with ** never match directories
 			if (matcher.endsWith("/**")) {
 				return false;
