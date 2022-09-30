@@ -799,6 +799,193 @@ describe('ConfigArray', () => {
 
 		});
 
+		describe('isFileIgnored()', () => {
+
+			it('should throw an error when not normalized', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(() => {
+					unnormalizedConfigs.isFileIgnored(filename);
+				})
+					.to
+					.throw(/normalized/);
+			});
+
+			it('should return false when passed JS filename', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(configs.isFileIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed JS filename in parent directory', () => {
+				const filename = path.resolve(basePath, '../foo.js');
+
+				expect(configs.isFileIgnored(filename)).to.be.true;
+			});
+
+			it('should return false when passed HTML filename', () => {
+				const filename = path.resolve(basePath, 'foo.html');
+
+				expect(configs.isFileIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed ignored .gitignore filename', () => {
+				const filename = path.resolve(basePath, '.gitignore');
+
+				expect(configs.isFileIgnored(filename)).to.be.true;
+			});
+
+			it('should return false when passed CSS filename', () => {
+				const filename = path.resolve(basePath, 'foo.css');
+
+				expect(configs.isFileIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed docx filename', () => {
+				const filename = path.resolve(basePath, 'sss.docx');
+
+				expect(configs.isFileIgnored(filename)).to.be.false;
+			});
+
+			it('should return true when passed ignored node_modules filename', () => {
+				const filename = path.resolve(basePath, 'node_modules/foo.js');
+
+				expect(configs.isFileIgnored(filename)).to.be.true;
+			});
+
+			it('should return true when passed matching both files and ignores in a config', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.xsl'],
+						ignores: ['fixtures/test.xsl'],
+						defs: {
+							xsl: true
+						}
+					}
+				], { basePath });
+
+				configs.normalizeSync();
+				const filename = path.resolve(basePath, 'fixtures/test.xsl');
+
+				expect(configs.isFileIgnored(filename)).to.be.true;
+			});
+
+			it('should return false when negated pattern comes after matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/foo.*'],
+						ignores: ['**/*.txt', '!foo.txt']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isFileIgnored(path.join(basePath, 'foo.txt'))).to.be.false;
+			});
+
+			it('should return true when negated pattern comes before matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['!foo.txt', '**/*.txt']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isFileIgnored(path.join(basePath, 'foo.txt'))).to.be.true;
+			});
+
+			it('should return false when matching files and ignores has a negated pattern comes after matching pattern', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js'],
+						ignores: ['**/*.test.js', '!foo.test.js']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'bar.test.js'))).to.be.true;
+				expect(configs.isFileIgnored(path.join(basePath, 'foo.test.js'))).to.be.false;
+			});
+
+		});
+
+		describe("isDirectoryIgnored()", () => {
+			
+			it("should return true when a directory is in ignores", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/node_modules']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules')), "No trailing slash").to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/"), "Trailing slash").to.be.true;
+				
+			});
+
+			it("should return true when a directory with a trailing slash is in ignores", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/node_modules/']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules'))).to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/"), "Trailing slash").to.be.true;
+			});
+
+			it("should return false when a directory followed by ** is in ignores", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['**/node_modules/**']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/")).to.be.false;
+				
+			});
+
+			it("should return false when there is a files entry", () => {
+				configs = new ConfigArray([
+					{
+						files: ["**/*.js"],
+						ignores: ['**/node_modules']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/"), "Trailing slash").to.be.false;
+			});
+
+		});
+
 		describe('isExplicitMatch()', () => {
 
 			it('should throw an error when not normalized', () => {

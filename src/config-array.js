@@ -47,7 +47,7 @@ function isString(value) {
  * @param {object} options The minimatch options to use.
  * @returns 
  */
-function doMatch(filepath, pattern, options) {
+function doMatch(filepath, pattern, options = {}) {
 
 	let cache = minimatchCache;
 
@@ -58,7 +58,7 @@ function doMatch(filepath, pattern, options) {
 	let matcher = cache.get(pattern);
 
 	if (!matcher) {
-		matcher = new Minimatch(pattern, options);
+		matcher = new Minimatch(pattern, Object.assign({}, MINIMATCH_OPTIONS, options));
 		cache.set(pattern, matcher);
 	}
 
@@ -208,13 +208,12 @@ function shouldIgnoreFilePath(ignores, filePath, relativeFilePath) {
 			 */
 			if (shouldIgnore &&
 				doMatch(relativeFilePath, matcher, {
-					...MINIMATCH_OPTIONS,
 					flipNegate: true
 				})) {
 				return false;
 			}
 		} else {
-			shouldIgnore = shouldIgnore || doMatch(relativeFilePath, matcher, MINIMATCH_OPTIONS);
+			shouldIgnore = shouldIgnore || doMatch(relativeFilePath, matcher);
 		}
 
 	}
@@ -250,7 +249,7 @@ function pathMatches(filePath, basePath, config) {
 	const match = pattern => {
 
 		if (isString(pattern)) {
-			return doMatch(relativeFilePath, pattern, MINIMATCH_OPTIONS);
+			return doMatch(relativeFilePath, pattern);
 		}
 
 		if (typeof pattern === 'function') {
@@ -712,9 +711,49 @@ export class ConfigArray extends Array {
 	 * Determines if the given filepath is ignored based on the configs.
 	 * @param {string} filePath The complete path of a file to check.
 	 * @returns {boolean} True if the path is ignored, false if not.
+	 * @deprecated Use `isFileIgnored` instead.
 	 */
 	isIgnored(filePath) {
+		return this.isFileIgnored(filePath);
+	}
+
+	/**
+	 * Determines if the given filepath is ignored based on the configs.
+	 * @param {string} filePath The complete path of a file to check.
+	 * @returns {boolean} True if the path is ignored, false if not.
+	 */
+	isFileIgnored(filePath) {
 		return this.getConfig(filePath) === undefined;
+	}
+
+	/**
+	 * Determines if the given directory is ignored based on the configs.
+	 * This checks only default `ignores` that don't have `files` in the 
+	 * same config. A pattern such as `/foo` be considered to ignore the directory
+	 * while a pattern such as `/foo/**` is not considered to ignore the
+	 * directory because it is matching files.
+	 * @param {string} directoryPath The complete path of a file to check.
+	 * @returns {boolean} True if the directory is ignored, false if not.
+	 */
+	isDirectoryIgnored(directoryPath) {
+
+		const normalizedDirectoryPath = directoryPath.endsWith("/")
+			? directoryPath
+			: directoryPath + "/";
+
+		return this.ignores.some(matcher => {
+
+			if (typeof matcher === "function") {
+				return matcher(normalizedDirectoryPath);
+			}
+
+			// patterns ending with ** never match directories
+			if (matcher.endsWith("/**")) {
+				return false;
+			}
+
+			return doMatch(normalizedDirectoryPath, matcher);
+		});
 	}
 
 }
