@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/humanwhocodes/config-array/compare/v0.10.7...v0.11.0) (2022-09-30)
+
+
+### Features
+
+* Add isDirectoryIgnored; deprecated isIgnored ([e6942f2](https://github.com/humanwhocodes/config-array/commit/e6942f2ce075007d39f23530593b7adb19178a52))
+
 ## [0.10.7](https://github.com/humanwhocodes/config-array/compare/v0.10.6...v0.10.7) (2022-09-29)
 
 
