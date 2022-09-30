@@ -921,6 +921,22 @@ describe('ConfigArray', () => {
 
 		describe("isDirectoryIgnored()", () => {
 			
+			it("should return true when a function return false in ignores", () => {
+				configs = new ConfigArray([
+					{
+						ignores: [directoryPath => directoryPath.includes("node_modules")]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules')), "No trailing slash").to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + "/"), "Trailing slash").to.be.true;
+
+			});
+
 			it("should return true when a directory is in ignores", () => {
 				configs = new ConfigArray([
 					{
