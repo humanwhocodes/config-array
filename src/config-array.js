@@ -732,19 +732,20 @@ export class ConfigArray extends Array {
 	 * same config. A pattern such as `/foo` be considered to ignore the directory
 	 * while a pattern such as `/foo/**` is not considered to ignore the
 	 * directory because it is matching files.
-	 * @param {string} directoryPath The complete path of a file to check.
+	 * @param {string} directoryPath The complete path of a directory to check.
 	 * @returns {boolean} True if the directory is ignored, false if not.
 	 */
 	isDirectoryIgnored(directoryPath) {
 
-		const normalizedDirectoryPath = directoryPath.endsWith("/")
-			? directoryPath
-			: directoryPath + "/";
+		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + "/";
+		if (relativeDirectoryPath.startsWith("..")) {
+			throw new Error(`Directory ${directoryPath} is outside of the basePath ${this.basePath}`);
+		}
 
 		return this.ignores.some(matcher => {
 
 			if (typeof matcher === "function") {
-				return matcher(normalizedDirectoryPath);
+				return matcher(relativeDirectoryPath);
 			}
 
 			// skip negated patterns because you can't unignore directories
@@ -757,7 +758,7 @@ export class ConfigArray extends Array {
 				return false;
 			}
 
-			return doMatch(normalizedDirectoryPath, matcher);
+			return doMatch(relativeDirectoryPath, matcher);
 		});
 	}
 

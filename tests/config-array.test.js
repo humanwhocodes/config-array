@@ -1030,6 +1030,22 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'bar') + "/"), "Trailing slash").to.be.false;
 			});
 
+			it("should return true when there is a directory relative to basePath in ignores", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['foo/bar']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+// C:\Users\nzaka\AppData\Local\Temp\eslint\fixtures\ignores-directory\subdir\subsubdir/'
+// subdir/subsubdir
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar'))).to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar') + "/"), "Trailing slash").to.be.true;
+			});
+
 		});
 
 		describe('isExplicitMatch()', () => {
