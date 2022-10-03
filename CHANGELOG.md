@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.11.2](https://github.com/humanwhocodes/config-array/compare/v0.11.1...v0.11.2) (2022-10-03)
+
+
+### Bug Fixes
+
+* Error conditions for isDirectoryIgnored ([0bd81f5](https://github.com/humanwhocodes/config-array/commit/0bd81f53b7c217d561f70709057c7d77f17e8c6d))
+* isDirectoryIgnored should match on relative path. ([3d1eaf6](https://github.com/humanwhocodes/config-array/commit/3d1eaf6389056215e27793cde9c2954c01c78df8))
+* isFileIgnored should call isDirectoryIgnored ([270d359](https://github.com/humanwhocodes/config-array/commit/270d359295f376edb0c73905f62a848284d34053))
+
+
+### Performance Improvements
+
+* Cache isDirectoryIgnored calls ([c5e6720](https://github.com/humanwhocodes/config-array/commit/c5e67208618e253c08bd320efeae4b1f63641e63))
+
 ## [0.11.1](https://github.com/humanwhocodes/config-array/compare/v0.11.0...v0.11.1) (2022-09-30)
 
 
