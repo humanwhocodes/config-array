@@ -1040,10 +1040,39 @@ describe('ConfigArray', () => {
 				});
 
 				configs.normalizeSync();
-// C:\Users\nzaka\AppData\Local\Temp\eslint\fixtures\ignores-directory\subdir\subsubdir/'
-// subdir/subsubdir
+
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar'))).to.be.true;
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar') + "/"), "Trailing slash").to.be.true;
+			});
+
+			it("should throw an error when the config array isn't normalized", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['foo/bar']
+					}
+				], {
+					basePath
+				});
+
+				expect(() => {
+					configs.isDirectoryIgnored("foo/bar");
+				}).throws(/normalized/);
+			});
+
+			it("should throw an error when the directory is outside of the basePath", () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['foo/bar']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(() => {
+					configs.isDirectoryIgnored("/usr/fake/foo/bar");
+				}).throws(/outside/);
 			});
 
 		});

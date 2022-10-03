@@ -737,8 +737,12 @@ export class ConfigArray extends Array {
 	 * directory because it is matching files.
 	 * @param {string} directoryPath The complete path of a directory to check.
 	 * @returns {boolean} True if the directory is ignored, false if not.
+	 * @throws {Error} When the `ConfigArray` is not normalized.
+	 * @throws {Error} When `directoryPath` is outside of `basePath`.
 	 */
 	isDirectoryIgnored(directoryPath) {
+
+		assertNormalized(this);
 
 		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + "/";
 		if (relativeDirectoryPath.startsWith("..")) {
