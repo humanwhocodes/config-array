@@ -396,7 +396,10 @@ export class ConfigArray extends Array {
 
 		// init cache
 		dataCache.set(this, {
-			explicitMatches: new Map()
+			explicitMatches: new Map(),
+			directoryMatches: new Map(),
+			files: undefined,
+			ignores: undefined
 		});
 
 		// load the configs into this array
@@ -742,7 +745,15 @@ export class ConfigArray extends Array {
 			throw new Error(`Directory ${directoryPath} is outside of the basePath ${this.basePath}`);
 		}
 
-		return this.ignores.some(matcher => {
+		// first check the cache
+		const cache = dataCache.get(this).directoryMatches;
+
+		if (cache.has(relativeDirectoryPath)) {
+			return cache.get(relativeDirectoryPath);
+		}
+
+		// if we've made it here, it means there's nothing in the cache
+		const result = this.ignores.some(matcher => {
 
 			if (typeof matcher === "function") {
 				return matcher(relativeDirectoryPath);
@@ -760,6 +771,10 @@ export class ConfigArray extends Array {
 
 			return doMatch(relativeDirectoryPath, matcher);
 		});
+
+		cache.set(relativeDirectoryPath, result);
+
+		return result;
 	}
 
 }
