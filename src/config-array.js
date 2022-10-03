@@ -343,11 +343,11 @@ export class ConfigArray extends Array {
 	 * @param {Array<string>} [options.configTypes] List of config types supported.
 	 */
 	constructor(configs, {
-			basePath = '',
-			normalized = false,
-			schema: customSchema,
-			extraConfigTypes = []
-		} = {}
+		basePath = '',
+		normalized = false,
+		schema: customSchema,
+		extraConfigTypes = []
+	} = {}
 	) {
 		super();
 
@@ -753,8 +753,8 @@ export class ConfigArray extends Array {
 
 		assertNormalized(this);
 
-		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + "/";
-		if (relativeDirectoryPath.startsWith("..")) {
+		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + '/';
+		if (relativeDirectoryPath.startsWith('..')) {
 			return true;
 		}
 
@@ -768,17 +768,17 @@ export class ConfigArray extends Array {
 		// if we've made it here, it means there's nothing in the cache
 		const result = this.ignores.some(matcher => {
 
-			if (typeof matcher === "function") {
+			if (typeof matcher === 'function') {
 				return matcher(relativeDirectoryPath);
 			}
 
 			// skip negated patterns because you can't unignore directories
-			if (matcher.startsWith("!")) {
+			if (matcher.startsWith('!')) {
 				return false;
 			}
 
 			// patterns ending with ** never match directories
-			if (matcher.endsWith("/**")) {
+			if (matcher.endsWith('/**')) {
 				return false;
 			}
 
