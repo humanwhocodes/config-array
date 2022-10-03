@@ -643,11 +643,20 @@ export class ConfigArray extends Array {
 
 		// next check to see if the file should be ignored
 
+		// check if this should be ignored due to its directory
+		if (this.isDirectoryIgnored(path.dirname(filePath))) {
+			debug(`Ignoring ${filePath} based on directory pattern`);
+
+			// cache and return result - finalConfig is undefined at this point
+			cache.set(filePath, finalConfig);
+			return finalConfig;
+		}
+
 		// TODO: Maybe move elsewhere?
 		const relativeFilePath = path.relative(this.basePath, filePath);
 
 		if (shouldIgnoreFilePath(this.ignores, filePath, relativeFilePath)) {
-			debug(`Ignoring ${filePath}`);
+			debug(`Ignoring ${filePath} based on file pattern`);
 
 			// cache and return result - finalConfig is undefined at this point
 			cache.set(filePath, finalConfig);
@@ -736,9 +745,9 @@ export class ConfigArray extends Array {
 	 * while a pattern such as `/foo/**` is not considered to ignore the
 	 * directory because it is matching files.
 	 * @param {string} directoryPath The complete path of a directory to check.
-	 * @returns {boolean} True if the directory is ignored, false if not.
+	 * @returns {boolean} True if the directory is ignored, false if not. Will
+	 * 		return true for any directory that is not inside of `basePath`.
 	 * @throws {Error} When the `ConfigArray` is not normalized.
-	 * @throws {Error} When `directoryPath` is outside of `basePath`.
 	 */
 	isDirectoryIgnored(directoryPath) {
 
@@ -746,7 +755,7 @@ export class ConfigArray extends Array {
 
 		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + "/";
 		if (relativeDirectoryPath.startsWith("..")) {
-			throw new Error(`Directory ${directoryPath} is outside of the basePath ${this.basePath}`);
+			return true;
 		}
 
 		// first check the cache

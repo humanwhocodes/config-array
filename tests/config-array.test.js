@@ -917,6 +917,23 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo.test.js'))).to.be.false;
 			});
 
+			it('should return false when file is inside of ignored directory', () => {
+				configs = new ConfigArray([
+					{
+						ignores: ['ignoreme']
+					},
+					{
+						files: ['**/*.js']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'ignoreme/foo.js'))).to.be.true;
+			});
+
 		});
 
 		describe("isDirectoryIgnored()", () => {
@@ -1059,7 +1076,7 @@ describe('ConfigArray', () => {
 				}).throws(/normalized/);
 			});
 
-			it("should throw an error when the directory is outside of the basePath", () => {
+			it("should return true when the directory is outside of the basePath", () => {
 				configs = new ConfigArray([
 					{
 						ignores: ['foo/bar']
@@ -1070,9 +1087,7 @@ describe('ConfigArray', () => {
 
 				configs.normalizeSync();
 
-				expect(() => {
-					configs.isDirectoryIgnored("/usr/fake/foo/bar");
-				}).throws(/outside/);
+				expect(configs.isDirectoryIgnored(path.resolve(basePath, '../foo/bar'))).to.be.true;
 			});
 
 		});
