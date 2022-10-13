@@ -175,50 +175,42 @@ function normalizeSync(items, context, extraConfigTypes) {
  * @param {string} relativeFilePath The relative path of the file to check.
  * @returns {boolean} True if the path should be ignored and false if not.
  */
-function shouldIgnoreFilePath(ignores, filePath, relativeFilePath) {
+function shouldIgnorePath(ignores, filePath, relativeFilePath) {
 
 	// all files outside of the basePath are ignored
 	if (relativeFilePath.startsWith('..')) {
 		return true;
 	}
 
-	let shouldIgnore = false;
+	return ignores.reduce((ignored, matcher) => {
 
-	for (const matcher of ignores) {
+		if (!ignored) {
 
-		if (typeof matcher === 'function') {
-			shouldIgnore = shouldIgnore || matcher(filePath);
-			continue;
-		}
-
-		/*
-		 * If there's a negated pattern, that means anything matching
-		 * must NOT be ignored. To do that, we need to use the `flipNegate`
-		 * option for minimatch to check if the filepath matches the
-		 * pattern specified after the !, and if that result is true,
-		 * then we return false immediately because this file should
-		 * never be ignored.
-		 */
-		if (matcher.startsWith('!')) {
-
-			/*
-			 * The file must already be ignored in order to apply a negated
-			 * pattern, because negated patterns simply remove files that
-			 * would already be ignored.
-			 */
-			if (shouldIgnore &&
-				doMatch(relativeFilePath, matcher, {
-					flipNegate: true
-				})) {
-				return false;
+			if (typeof matcher === 'function') {
+				return matcher(filePath);
 			}
-		} else {
-			shouldIgnore = shouldIgnore || doMatch(relativeFilePath, matcher);
+
+			// don't check negated patterns because we're not ignored yet
+			if (!matcher.startsWith('!')) {
+				return doMatch(relativeFilePath, matcher);
+			}
+
+			// otherwise we're still not ignored
+			return false;
+
 		}
 
-	}
+		// only need to check negated patterns because we're ignored
+		if (typeof matcher === 'string' && matcher.startsWith('!')) {
+			return !doMatch(relativeFilePath, matcher, {
+				flipNegate: true
+			});
+		}
 
-	return shouldIgnore;
+		return ignored;
+
+	}, false);
+
 }
 
 /**
@@ -273,7 +265,7 @@ function pathMatches(filePath, basePath, config) {
 	 * if there are any files to ignore.
 	 */
 	if (filePathMatchesPattern && config.ignores) {
-		filePathMatchesPattern = !shouldIgnoreFilePath(config.ignores, filePath, relativeFilePath);
+		filePathMatchesPattern = !shouldIgnorePath(config.ignores, filePath, relativeFilePath);
 	}
 
 	return filePathMatchesPattern;
@@ -597,7 +589,7 @@ export class ConfigArray extends Array {
 		// TODO: Maybe move elsewhere? Maybe combine with getConfig() logic?
 		const relativeFilePath = path.relative(this.basePath, filePath);
 
-		if (shouldIgnoreFilePath(this.ignores, filePath, relativeFilePath)) {
+		if (shouldIgnorePath(this.ignores, filePath, relativeFilePath)) {
 			debug(`Ignoring ${filePath}`);
 
 			// cache and return result
@@ -655,7 +647,7 @@ export class ConfigArray extends Array {
 		// TODO: Maybe move elsewhere?
 		const relativeFilePath = path.relative(this.basePath, filePath);
 
-		if (shouldIgnoreFilePath(this.ignores, filePath, relativeFilePath)) {
+		if (shouldIgnorePath(this.ignores, filePath, relativeFilePath)) {
 			debug(`Ignoring ${filePath} based on file pattern`);
 
 			// cache and return result - finalConfig is undefined at this point
@@ -765,25 +757,11 @@ export class ConfigArray extends Array {
 			return cache.get(relativeDirectoryPath);
 		}
 
-		// if we've made it here, it means there's nothing in the cache
-		const result = this.ignores.some(matcher => {
-
-			if (typeof matcher === 'function') {
-				return matcher(relativeDirectoryPath);
-			}
-
-			// skip negated patterns because you can't unignore directories
-			if (matcher.startsWith('!')) {
-				return false;
-			}
-
-			// patterns ending with ** never match directories
-			if (matcher.endsWith('/**')) {
-				return false;
-			}
-
-			return doMatch(relativeDirectoryPath, matcher);
-		});
+		const result = shouldIgnorePath(
+			this.ignores.filter(matcher => typeof matcher === 'function' || !matcher.endsWith('/**')),
+			directoryPath,
+			relativeDirectoryPath
+		);
 
 		cache.set(relativeDirectoryPath, result);
 

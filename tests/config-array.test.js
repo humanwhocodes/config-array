@@ -934,6 +934,26 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'ignoreme/foo.js'))).to.be.true;
 			});
 
+			it('should return false when file is inside of ignored directory', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/*',
+							'!foo/bar'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.false;
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
@@ -1017,7 +1037,7 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules') + '/'), 'Trailing slash').to.be.false;
 			});
 
-			it('should return true and not check negated pattern when there is a negated pattern', () => {
+			it('should return true when directory matches and there is a negated pattern', () => {
 				configs = new ConfigArray([
 					{
 						ignores: ['**/foo/', '!**/node_modules']
@@ -1032,7 +1052,7 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo') + '/'), 'Trailing slash').to.be.true;
 			});
 
-			it('should return false and not check negated pattern when there is a negated pattern', () => {
+			it('should return false when directory doesn\'t match and there is a negated pattern', () => {
 				configs = new ConfigArray([
 					{
 						ignores: ['**/foo/', '!**/node_modules']
@@ -1046,6 +1066,25 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'bar'))).to.be.false;
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'bar') + '/'), 'Trailing slash').to.be.false;
 			});
+
+			it('should return false when ignored directory is unignored', () => {
+				configs = new ConfigArray([
+					{
+						ignores: [
+							'foo/*',
+							'!foo/bar'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar/'))).to.be.false;
+			});
+
 
 			it('should return true when there is a directory relative to basePath in ignores', () => {
 				configs = new ConfigArray([
