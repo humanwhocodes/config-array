@@ -954,6 +954,27 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.false;
 			});
 
+			it('should return true when file is ignored, unignored, and then reignored', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'a.js',
+							'!a*.js',
+							'a.js'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'a.js'))).to.be.true;
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
