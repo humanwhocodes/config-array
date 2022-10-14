@@ -481,7 +481,28 @@ export class ConfigArray extends Array {
 			 * are additional keys, then ignores act like exclusions.
 			 */
 			if (config.ignores && Object.keys(config).length === 1) {
-				result.push(...config.ignores);
+
+				/*
+				 * If there are directory ignores, then we need to double up
+				 * the patterns to be ignored. For instance, `foo` will also
+				 * need `foo/**` in order to account for subdirectories.
+				 */
+				config.ignores.forEach(ignore => {
+
+					result.push(ignore);
+					
+					if (typeof ignore === 'string') {
+
+						// directories should work with or without a trailing slash
+						if (ignore.endsWith('/')) {
+							result.push(ignore.slice(0, ignore.length - 1));
+							result.push(ignore + '**');
+						} else if (!ignore.endsWith('*')) {
+							result.push(ignore + '/**');
+						}
+
+					}
+				});
 			}
 		}
 
@@ -745,7 +766,7 @@ export class ConfigArray extends Array {
 
 		assertNormalized(this);
 
-		const relativeDirectoryPath = path.relative(this.basePath, directoryPath) + '/';
+		const relativeDirectoryPath = path.relative(this.basePath, directoryPath);
 		if (relativeDirectoryPath.startsWith('..')) {
 			return true;
 		}
@@ -756,9 +777,10 @@ export class ConfigArray extends Array {
 		if (cache.has(relativeDirectoryPath)) {
 			return cache.get(relativeDirectoryPath);
 		}
-
+		
+		// first check non-/** paths
 		const result = shouldIgnorePath(
-			this.ignores.filter(matcher => typeof matcher === 'function' || !matcher.endsWith('/**')),
+			this.ignores, //.filter(matcher => typeof matcher === "function" || !matcher.endsWith("/**")),
 			directoryPath,
 			relativeDirectoryPath
 		);

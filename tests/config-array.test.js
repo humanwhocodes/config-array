@@ -975,6 +975,25 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'a.js'))).to.be.true;
 			});
 
+			it('should return true when the parent directory of a file is ignored', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.true;
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
@@ -1149,6 +1168,27 @@ describe('ConfigArray', () => {
 
 				expect(configs.isDirectoryIgnored(path.resolve(basePath, '../foo/bar'))).to.be.true;
 			});
+
+			it('should return true when the parent directory of a directory is ignored', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar'))).to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar/'))).to.be.true;
+			});
+
 
 		});
 
