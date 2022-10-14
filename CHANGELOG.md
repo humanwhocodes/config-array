@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.4](https://github.com/humanwhocodes/config-array/compare/v0.11.3...v0.11.4) (2022-10-14)
+
+
+### Bug Fixes
+
+* Ensure subdirectories of ignored directories are ignored ([0df450e](https://github.com/humanwhocodes/config-array/commit/0df450eabeb595ae22fe680ce3320dc47edb1e66))
+
 ## [0.11.3](https://github.com/humanwhocodes/config-array/compare/v0.11.2...v0.11.3) (2022-10-13)
 
 
