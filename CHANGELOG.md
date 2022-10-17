@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.5](https://github.com/humanwhocodes/config-array/compare/v0.11.4...v0.11.5) (2022-10-17)
+
+
+### Bug Fixes
+
+* Unignoring of directories should work ([e1c9dcd](https://github.com/humanwhocodes/config-array/commit/e1c9dcd05534619effe258596191ea9dc5bb37af))
+
 ## [0.11.4](https://github.com/humanwhocodes/config-array/compare/v0.11.3...v0.11.4) (2022-10-14)
 
 
