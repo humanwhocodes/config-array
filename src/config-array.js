@@ -493,6 +493,16 @@ export class ConfigArray extends Array {
 					
 					if (typeof ignore === 'string') {
 
+						// unignoring files won't work unless we unignore directories too
+						if (ignore.startsWith('!')) {
+
+							if (ignore.endsWith('/**')) {
+								result.push(ignore.slice(0, ignore.length - 3));
+							} else if (ignore.endsWith('/*')) {
+								result.push(ignore.slice(0, ignore.length - 2));
+							}
+						}
+
 						// directories should work with or without a trailing slash
 						if (ignore.endsWith('/')) {
 							result.push(ignore.slice(0, ignore.length - 1));

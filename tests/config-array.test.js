@@ -994,6 +994,54 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.true;
 			});
 
+			it('should return false when an ignored directory is later unignored with **', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/package/**'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'node_modules/package/a.js'))).to.be.false;
+			});
+
+			it('should return false when an ignored directory is later unignored with *', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/package/*'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'node_modules/package/a.js'))).to.be.false;
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
@@ -1187,6 +1235,57 @@ describe('ConfigArray', () => {
 
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar'))).to.be.true;
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'foo/bar/'))).to.be.true;
+			});
+
+
+			it('should return false when an ignored directory is later unignored with **', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/package/**'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package/'))).to.be.false;
+			});
+
+			it('should return false when an ignored directory is later unignored with *', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/package/*'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package/'))).to.be.false;
 			});
 
 
