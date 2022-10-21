@@ -40,6 +40,18 @@ function isString(value) {
 }
 
 /**
+ * Asserts that the files key of a config object is a nonempty array.
+ * @param {object} config The config object to check.
+ * @returns {void}
+ * @throws {TypeError} If the files key isn't a nonempty array. 
+ */
+function assertNonEmptyFilesArray(config) {
+	if (!Array.isArray(config.files) || config.files.length === 0) {
+		throw new TypeError('The files key must be a non-empty array.');
+	}
+}
+
+/**
  * Wrapper around minimatch that caches minimatch patterns for
  * faster matching speed over multiple file path evaluations.
  * @param {string} filepath The file path to match.
@@ -233,9 +245,7 @@ function pathMatches(filePath, basePath, config) {
 	const relativeFilePath = path.relative(basePath, filePath);
 
 	// if files isn't an array, throw an error
-	if (!Array.isArray(config.files) || config.files.length === 0) {
-		throw new TypeError('The files key must be a non-empty array.');
-	}
+	assertNonEmptyFilesArray(config);
 
 	// match both strings and functions
 	const match = pattern => {
@@ -690,15 +700,70 @@ export class ConfigArray extends Array {
 
 		const matchingConfigIndices = [];
 		let matchFound = false;
+		const universalPattern = /\/\*{1,2}$/;
 
 		this.forEach((config, index) => {
 
 			if (!config.files) {
-				debug(`Universal config found for ${filePath}`);
+				debug(`Anonymous universal config found for ${filePath}`);
 				matchingConfigIndices.push(index);
 				return;
 			}
 
+			assertNonEmptyFilesArray(config);
+
+			/*
+			 * If a config has a files pattern ending in /** or /*, and the
+			 * filePath only matches those patterns, then the config is only
+			 * applied if there is another config where the filePath matches
+			 * a file with a specific extensions such as *.js.
+			 */
+
+			const universalFiles = config.files.filter(
+				pattern => universalPattern.test(pattern)
+			);
+
+			// universal patterns were found so we need to check the config twice
+			if (universalFiles.length) {
+
+				debug('Universal files patterns found. Checking carefully.');
+
+				const nonUniversalFiles = config.files.filter(
+					pattern => !universalPattern.test(pattern)
+				);
+
+				// check that the config matches without the non-universal files first
+				if (
+					nonUniversalFiles.length && 
+					pathMatches(
+						filePath, this.basePath,
+						{ files: nonUniversalFiles, ignores: config.ignores }
+					)
+				) {
+					debug(`Matching config found for ${filePath}`);
+					matchingConfigIndices.push(index);
+					matchFound = true;
+					return;
+				}
+
+				// if there wasn't a match then check if it matches with universal files
+				if (
+					universalFiles.length &&
+					pathMatches(
+						filePath, this.basePath,
+						{ files: universalFiles, ignores: config.ignores }
+					)
+				) {
+					debug(`Matching config found for ${filePath}`);
+					matchingConfigIndices.push(index);
+					return;
+				}
+
+				// if we make here, then there was no match
+				return;
+			}
+
+			// the normal case
 			if (pathMatches(filePath, this.basePath, config)) {
 				debug(`Matching config found for ${filePath}`);
 				matchingConfigIndices.push(index);

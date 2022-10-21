@@ -149,6 +149,12 @@ function createConfigArray(options) {
 		},
 		{
 			ignores: [filePath => filePath.endsWith('.gitignore')]
+		},
+		{
+			files: ['**/*'],
+			defs: {
+				universal: true
+			}
 		}
 	], {
 		basePath,
@@ -497,6 +503,7 @@ describe('ConfigArray', () => {
 				expect(config.language).to.equal(JSLanguage);
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('config-array');
+				expect(config.defs.universal).to.be.true;
 				expect(config.defs.css).to.be.false;
 			});
 
@@ -507,6 +514,7 @@ describe('ConfigArray', () => {
 
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('config-array');
+				expect(config.defs.universal).to.be.true;
 				expect(config.defs.xyz).to.be.true;
 			});
 
@@ -517,6 +525,7 @@ describe('ConfigArray', () => {
 
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('HTML');
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should return undefined when passed ignored .gitignore filename', () => {
@@ -536,6 +545,7 @@ describe('ConfigArray', () => {
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('config-array.test');
 				expect(config.defs.css).to.be.false;
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should calculate correct config when passed JS filename that matches a function config', () => {
@@ -547,6 +557,7 @@ describe('ConfigArray', () => {
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('from-context');
 				expect(config.defs.css).to.be.false;
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should not match a filename that doesn\'t explicitly match a files pattern', () => {
@@ -612,6 +623,7 @@ describe('ConfigArray', () => {
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('async-from-context');
 				expect(config.defs.css).to.be.false;
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should calculate correct config when passed JS filename that matches a function config returning an array', () => {
@@ -638,7 +650,7 @@ describe('ConfigArray', () => {
 				expect(config.language).to.equal(CSSLanguage);
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('config-array');
-
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should calculate correct config when passed JS filename that matches AND pattern', () => {
@@ -649,6 +661,7 @@ describe('ConfigArray', () => {
 				expect(config.defs).to.be.an('object');
 				expect(config.defs.name).to.equal('AND operator');
 				expect(config.defs.css).to.be.false;
+				expect(config.defs.universal).to.be.true;
 			});
 
 			it('should return the same config when called with the same filename twice (caching)', () => {
@@ -1040,6 +1053,34 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'node_modules/package/a.js'))).to.be.false;
+			});
+
+			it('should return true when there are only patterns ending with /*', () => {
+				configs = new ConfigArray([
+					{
+						files: ['foo/*']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			it('should return true when there are only patterns ending with /**', () => {
+				configs = new ConfigArray([
+					{
+						files: ['foo/**']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 		});
