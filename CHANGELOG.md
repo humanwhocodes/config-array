@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.6](https://github.com/humanwhocodes/config-array/compare/v0.11.5...v0.11.6) (2022-10-21)
+
+
+### Bug Fixes
+
+* Only apply universal patterns if others match. ([e69c8fd](https://github.com/humanwhocodes/config-array/commit/e69c8fdbb7696b406821bc723b86b4c5304c4260))
+
 ## [0.11.5](https://github.com/humanwhocodes/config-array/compare/v0.11.4...v0.11.5) (2022-10-17)
 
 
