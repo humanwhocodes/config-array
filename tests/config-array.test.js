@@ -1083,6 +1083,20 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
+			it('should return false when files pattern matches and there is a pattern ending with /**', () => {
+				configs = new ConfigArray([
+					{
+						files: ['foo/*.js', 'foo/**']
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
