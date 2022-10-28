@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.7](https://github.com/humanwhocodes/config-array/compare/v0.11.6...v0.11.7) (2022-10-28)
+
+
+### Bug Fixes
+
+* **deps:** Update minimatch to secure version ([3219294](https://github.com/humanwhocodes/config-array/commit/3219294bf9170c500ee9e212b59e17ef205b7c3c))
+
 ## [0.11.6](https://github.com/humanwhocodes/config-array/compare/v0.11.5...v0.11.6) (2022-10-21)
 
 
