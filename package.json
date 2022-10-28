@@ -44,7 +44,7 @@
   "dependencies": {
     "@humanwhocodes/object-schema": "^1.2.1",
     "debug": "^4.1.1",
-    "minimatch": "^3.0.5"
+    "minimatch": "^5.0.0"
   },
   "devDependencies": {
     "@nitpik/javascript": "0.4.0",
