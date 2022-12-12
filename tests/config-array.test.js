@@ -1097,6 +1097,74 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
 			});
 
+			// https://github.com/eslint/eslint/pull/16579/files
+			describe('gitignore-style unignores', () => {
+
+				it('should return true when a subdirectory is ignored and then we try to unignore a directory', () => {
+					configs = new ConfigArray([
+						{
+							ignores: [
+								'/**/node_modules/*',
+								'!/node_modules/foo'
+							],
+						}
+					], { basePath });
+	
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
+	
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});				
+
+				it('should return true when a subdirectory is ignored and then we try to unignore a file', () => {
+					configs = new ConfigArray([
+						{
+							ignores: [
+								'/**/node_modules/*',
+								'!/node_modules/foo/**'
+							],
+						}
+					], { basePath });
+	
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
+	
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});
+
+				it('should return true when all descendant directories are ignored and then we try to unignore a file', () => {
+					configs = new ConfigArray([
+						{
+							ignores: [
+								'/**/node_modules/**',
+								'!/node_modules/foo/**'
+							],
+						}
+					], { basePath });
+	
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
+	
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});				
+
+				it('should return true when all descendant directories are ignored without leading slash and then we try to unignore a file', () => {
+					configs = new ConfigArray([
+						{
+							ignores: [
+								'**/node_modules/**',
+								'!/node_modules/foo/**'
+							],
+						}
+					], { basePath });
+	
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
+	
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});				
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
