@@ -739,7 +739,7 @@ export class ConfigArray extends Array {
 				if (pathMatchesIgnores(filePath, this.basePath, config)) {
 					debug(`Matching config found for ${filePath} (based on ignores: ${config.ignores})`);
 					matchingConfigIndices.push(index);
-					matchFound = true;
+					return;
 				}
 				
 				debug(`Skipped config found for ${filePath} (based on ignores: ${config.ignores})`);
