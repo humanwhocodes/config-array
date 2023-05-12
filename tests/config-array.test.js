@@ -497,7 +497,6 @@ describe('ConfigArray', () => {
 
 			it('should calculate correct config when passed JS filename', () => {
 				const filename = path.resolve(basePath, 'foo.js');
-
 				const config = configs.getConfig(filename);
 
 				expect(config.language).to.equal(JSLanguage);
@@ -689,6 +688,94 @@ describe('ConfigArray', () => {
 
 				expect(config).to.be.undefined;
 			});
+
+			// https://github.com/eslint/eslint/issues/17103
+			describe('ignores patterns should be properly applied', () => {
+				
+				it('should return undefined when a filename matches an ignores pattern but not a files pattern', () => {
+					const matchingFilename = path.resolve(basePath, 'foo.js');
+					const notMatchingFilename = path.resolve(basePath, 'foo.md');
+					configs = new ConfigArray([
+						{
+							defs: {
+								severity: 'error'
+							}
+						},
+						{
+							ignores: ['**/*.md'],
+							defs: {
+								severity: 'warn'
+							}
+						}
+					], { basePath, schema });
+	
+					configs.normalizeSync();
+	
+					const config1 = configs.getConfig(matchingFilename);
+					expect(config1).to.be.undefined;
+	
+					const config2 = configs.getConfig(notMatchingFilename);
+					expect(config2).to.be.undefined;
+				});
+
+				it('should apply config with only ignores when a filename matches a files pattern', () => {
+					const matchingFilename = path.resolve(basePath, 'foo.js');
+					const notMatchingFilename = path.resolve(basePath, 'foo.md');
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							defs: {
+								severity: 'error'
+							}
+						},
+						{
+							ignores: ['**/*.md'],
+							defs: {
+								severity: 'warn'
+							}
+						}
+					], { basePath, schema });
+
+					configs.normalizeSync();
+
+					const config1 = configs.getConfig(matchingFilename);
+					expect(config1).to.be.an('object');
+					expect(config1.defs.severity).to.equal('warn');
+
+					const config2 = configs.getConfig(notMatchingFilename);
+					expect(config2).to.be.undefined;
+				});
+
+				it('should not apply config with only ignores when a filename does not match it', () => {
+					const matchingFilename = path.resolve(basePath, 'foo.js');
+					const notMatchingFilename = path.resolve(basePath, 'bar.js');
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							defs: {
+								severity: 'error'
+							}
+						},
+						{
+							ignores: ['**/bar.js'],
+							defs: {
+								severity: 'warn'
+							}
+						}
+					], { basePath, schema });
+
+					configs.normalizeSync();
+
+					const config1 = configs.getConfig(matchingFilename);
+					expect(config1).to.be.an('object');
+					expect(config1.defs.severity).to.equal('warn');
+
+					const config2 = configs.getConfig(notMatchingFilename);
+					expect(config2).to.be.an('object');
+					expect(config2.defs.severity).to.equal('error');
+				});
+
+			});	
 
 		});
 
