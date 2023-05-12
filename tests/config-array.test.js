@@ -746,9 +746,9 @@ describe('ConfigArray', () => {
 					expect(config2).to.be.undefined;
 				});
 
-				it('should not apply config with only ignores when a filename does not match it', () => {
+				it('should not apply config with only ignores when a filename should be ignored', () => {
 					const matchingFilename = path.resolve(basePath, 'foo.js');
-					const notMatchingFilename = path.resolve(basePath, 'bar.js');
+					const ignoredFilename = path.resolve(basePath, 'bar.js');
 					configs = new ConfigArray([
 						{
 							files: ['**/*.js'],
@@ -770,7 +770,7 @@ describe('ConfigArray', () => {
 					expect(config1).to.be.an('object');
 					expect(config1.defs.severity).to.equal('warn');
 
-					const config2 = configs.getConfig(notMatchingFilename);
+					const config2 = configs.getConfig(ignoredFilename);
 					expect(config2).to.be.an('object');
 					expect(config2.defs.severity).to.equal('error');
 				});
