@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.9](https://github.com/humanwhocodes/config-array/compare/v0.11.8...v0.11.9) (2023-05-12)
+
+
+### Bug Fixes
+
+* Config with just ignores should not always be applied ([#89](https://github.com/humanwhocodes/config-array/issues/89)) ([5ed9c2c](https://github.com/humanwhocodes/config-array/commit/5ed9c2c1a13afb42cd7e9d3b1b247761cb7aa040))
+
 ## [0.11.8](https://github.com/humanwhocodes/config-array/compare/v0.11.7...v0.11.8) (2022-12-14)
 
 
