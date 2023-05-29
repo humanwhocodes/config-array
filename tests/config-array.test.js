@@ -1252,6 +1252,39 @@ describe('ConfigArray', () => {
 				});				
 			});
 
+			// https://github.com/eslint/eslint/issues/17213
+			describe('ignore entire directory', () => {
+
+				it('should return true when a subdirectory is ignored with double stars', () => {
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							ignores: ['ignored/**'],
+						}
+					], { basePath });
+
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'ignored/foo.js');
+
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});
+
+				it('should return true when a subdirectory is ignored with trailing slash', () => {
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							ignores: ['ignored/'],
+						}
+					], { basePath });
+
+					configs.normalizeSync();
+					const filename = path.resolve(basePath, 'ignored/foo.js');
+
+					expect(configs.isFileIgnored(filename)).to.be.true;
+				});
+
+			});
+
 		});
 
 		describe('isDirectoryIgnored()', () => {
