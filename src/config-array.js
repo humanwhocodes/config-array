@@ -204,16 +204,7 @@ function shouldIgnorePath(ignores, filePath, relativeFilePath) {
 
 			// don't check negated patterns because we're not ignored yet
 			if (!matcher.startsWith('!')) {
-
-				/*
-				 * In order to allow patterns such as "ignore/" to work
-				 * to ignore complete directories, we need to append "**"
-				 * at the end of any pattern that ends with a slash.
-				 * See https://github.com/eslint/eslint/issues/17213
-				 */
-				return matcher.endsWith('/')
-					? doMatch(relativeFilePath, `${matcher}**`)
-					: doMatch(relativeFilePath, matcher);
+				return doMatch(relativeFilePath, matcher);
 			}
 
 			// otherwise we're still not ignored
