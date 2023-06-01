@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.10](https://github.com/humanwhocodes/config-array/compare/v0.11.9...v0.11.10) (2023-06-01)
+
+
+### Bug Fixes
+
+* Allow directory-based ignores for files matches ([0163f31](https://github.com/humanwhocodes/config-array/commit/0163f313dbfe50d283042141dbad5958f9d5d2ad))
+* Revert allow directory-based ignores for files matches ([322ad01](https://github.com/humanwhocodes/config-array/commit/322ad011b7d4761205ae7f85c8fdb58574dbf388))
+
 ## [0.11.9](https://github.com/humanwhocodes/config-array/compare/v0.11.8...v0.11.9) (2023-05-12)
 
 
