@@ -332,6 +332,55 @@ describe('ConfigArray', () => {
 				.throw(/non-empty array/);
 
 		});
+
+		it('should throw an error when files contains an invalid element', async () => {
+			configs = new ConfigArray([
+				{
+					files: ['*.js', undefined]
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Key "files": Items must be a string, a function, or an array of strings and functions.');
+
+		});
+
+		it('should throw an error when a global ignores contains an invalid element', async () => {
+			configs = new ConfigArray([
+				{
+					ignores: ['ignored/**', -1]
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Key "ignores": Expected array to only contain strings and functions.');
+
+		});
+
+		it('should throw an error when a non-global ignores contains an invalid element', async () => {
+			configs = new ConfigArray([
+				{
+					files: ['*.js'],
+					ignores: [-1]
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Key "ignores": Expected array to only contain strings and functions.');
+
+		});
 	});
 
 	describe('ConfigArray members', () => {

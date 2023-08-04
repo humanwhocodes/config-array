@@ -30,6 +30,8 @@ const MINIMATCH_OPTIONS = {
 
 const CONFIG_TYPES = new Set(['array', 'function']);
 
+const BASE_SCHEMA = new ObjectSchema(baseSchema);
+
 /**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
@@ -40,15 +42,20 @@ function isString(value) {
 }
 
 /**
- * Asserts that the files key of a config object is a nonempty array.
+ * Asserts that the files and ignores keys of a config object are valid as per base schema.
  * @param {object} config The config object to check.
  * @returns {void}
- * @throws {TypeError} If the files key isn't a nonempty array. 
+ * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
-function assertNonEmptyFilesArray(config) {
-	if (!Array.isArray(config.files) || config.files.length === 0) {
-		throw new TypeError('The files key must be a non-empty array.');
+function assertValidFilesAndIgnores({ files, ignores }) {
+	const validateConfig = { };
+	if (files !== undefined) {
+		validateConfig.files = files;
 	}
+	if (ignores !== undefined) {
+		validateConfig.ignores = ignores;
+	}
+	BASE_SCHEMA.validate(validateConfig);
 }
 
 /**
@@ -267,9 +274,6 @@ function pathMatches(filePath, basePath, config) {
 	 * file path.
 	 */
 	const relativeFilePath = path.relative(basePath, filePath);
-
-	// if files isn't an array, throw an error
-	assertNonEmptyFilesArray(config);
 
 	// match both strings and functions
 	const match = pattern => {
@@ -509,6 +513,8 @@ export class ConfigArray extends Array {
 
 		for (const config of this) {
 
+			assertValidFilesAndIgnores(config);
+
 			/*
 			 * We only count ignores if there are no other keys in the object.
 			 * In this case, it acts list a globally ignored pattern. If there
@@ -745,8 +751,6 @@ export class ConfigArray extends Array {
 				debug(`Skipped config found for ${filePath} (based on ignores: ${config.ignores})`);
 				return;
 			}
-
-			assertNonEmptyFilesArray(config);
 
 			/*
 			 * If a config has a files pattern ending in /** or /*, and the

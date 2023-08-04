@@ -29,7 +29,19 @@ function assertIsArrayOfStringsAndFunctions(value, name) {
 	assertIsArray(value, name);
 
 	if (value.some(item => typeof item !== 'string' && typeof item !== 'function')) {
-		throw new TypeError('Expected array to only contain strings.');
+		throw new TypeError('Expected array to only contain strings and functions.');
+	}
+}
+
+/**
+ * Assets that a given value is a non-empty array.
+ * @param {*} value The value to check.
+ * @returns {void}
+ * @throws {TypeError} When the value is not an array or an empty array.
+ */
+function assertIsNonEmptyArray(value) {
+	if (!Array.isArray(value) || value.length === 0) {
+		throw new TypeError('Expected value to be a non-empty array.');
 	}
 }
 
@@ -61,7 +73,7 @@ export const baseSchema = Object.freeze({
 		validate(value) {
 
 			// first check if it's an array
-			assertIsArray(value);
+			assertIsNonEmptyArray(value);
 
 			// then check each member
 			value.forEach(item => {
