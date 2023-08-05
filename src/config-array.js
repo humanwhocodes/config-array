@@ -13,6 +13,7 @@ import createDebug from 'debug';
 
 import { ObjectSchema } from '@humanwhocodes/object-schema';
 import { baseSchema } from './base-schema.js';
+import { filesAndIgnoresSchema } from './files-and-ignores-schema.js';
 
 //------------------------------------------------------------------------------
 // Helpers
@@ -30,7 +31,7 @@ const MINIMATCH_OPTIONS = {
 
 const CONFIG_TYPES = new Set(['array', 'function']);
 
-const BASE_SCHEMA = new ObjectSchema(baseSchema);
+const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
 
 /**
  * Shorthand for checking if a value is a string.
@@ -55,7 +56,7 @@ function assertValidFilesAndIgnores({ files, ignores }) {
 	if (ignores !== undefined) {
 		validateConfig.ignores = ignores;
 	}
-	BASE_SCHEMA.validate(validateConfig);
+	FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
 }
 
 /**

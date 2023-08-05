@@ -381,6 +381,23 @@ describe('ConfigArray', () => {
 				.throw('Key "ignores": Expected array to only contain strings and functions.');
 
 		});
+		
+		it('should throw an error when name is not a string', async () => {
+			configs = new ConfigArray([
+				{
+					files: ['**'],
+					name: true
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Key "name": Property must be a string.');
+
+		});
 	});
 
 	describe('ConfigArray members', () => {
