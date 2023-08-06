@@ -48,13 +48,13 @@ function isString(value) {
  * @returns {void}
  * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
-function assertValidFilesAndIgnores({ files, ignores }) {
+function assertValidFilesAndIgnores(config) {
 	const validateConfig = { };
-	if (files !== undefined) {
-		validateConfig.files = files;
+	if ('files' in config) {
+		validateConfig.files = config.files;
 	}
-	if (ignores !== undefined) {
-		validateConfig.ignores = ignores;
+	if ('ignores' in config) {
+		validateConfig.ignores = config.ignores;
 	}
 	FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
 }

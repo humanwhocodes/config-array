@@ -333,6 +333,22 @@ describe('ConfigArray', () => {
 
 		});
 
+		it('should throw an error when files is undefined', async () => {
+			configs = new ConfigArray([
+				{
+					files: undefined
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw(/non-empty array/);
+
+		});
+
 		it('should throw an error when files contains an invalid element', async () => {
 			configs = new ConfigArray([
 				{
@@ -346,6 +362,22 @@ describe('ConfigArray', () => {
 			})
 				.to
 				.throw('Key "files": Items must be a string, a function, or an array of strings and functions.');
+
+		});
+
+		it('should throw an error when ignores is undefined', async () => {
+			configs = new ConfigArray([
+				{
+					ignores: undefined
+				}
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Key "ignores": Expected value to be an array.');
 
 		});
 
