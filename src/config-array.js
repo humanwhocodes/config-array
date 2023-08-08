@@ -430,7 +430,8 @@ export class ConfigArray extends Array {
 			explicitMatches: new Map(),
 			directoryMatches: new Map(),
 			files: undefined,
-			ignores: undefined
+			ignores: undefined,
+			filesAndIgnoresValidated: false
 		});
 
 		// load the configs into this array
@@ -513,8 +514,6 @@ export class ConfigArray extends Array {
 		const result = [];
 
 		for (const config of this) {
-
-			assertValidFilesAndIgnores(config);
 
 			/*
 			 * We only count ignores if there are no other keys in the object.
@@ -703,6 +702,13 @@ export class ConfigArray extends Array {
 
 		if (finalConfig) {
 			return finalConfig;
+		}
+		
+		// check if files and ignores have been already validated, otherwise validate them
+		const configArrayCache = dataCache.get(this);
+		if (!configArrayCache.filesAndIgnoresValidated) {
+			this.forEach(assertValidFilesAndIgnores);
+			configArrayCache.filesAndIgnoresValidated = true;
 		}
 
 		// next check to see if the file should be ignored
