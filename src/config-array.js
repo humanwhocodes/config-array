@@ -49,6 +49,9 @@ function isString(value) {
  * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
 function assertValidFilesAndIgnores(config) {
+	if (!config || typeof config !== 'object') {
+		return;
+	}
 	const validateConfig = { };
 	if ('files' in config) {
 		validateConfig.files = config.files;

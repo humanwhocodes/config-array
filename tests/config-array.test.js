@@ -301,6 +301,23 @@ describe('ConfigArray', () => {
 	});
 
 	describe('Validation', () => {
+		it('should throw an error when a config is not an object', async () => {
+			configs = new ConfigArray([
+				{
+					files: ['*.js']
+				},
+				'eslint:reccommended' // typo
+			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('All arguments must be objects.');
+
+		});
+
 		it('should throw an error when files is not an array', async () => {
 			configs = new ConfigArray([
 				{
