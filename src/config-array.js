@@ -433,8 +433,7 @@ export class ConfigArray extends Array {
 			explicitMatches: new Map(),
 			directoryMatches: new Map(),
 			files: undefined,
-			ignores: undefined,
-			filesAndIgnoresValidated: false
+			ignores: undefined
 		});
 
 		// load the configs into this array
@@ -586,6 +585,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = await normalize(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
+			this.forEach(assertValidFilesAndIgnores);
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -607,6 +607,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = normalizeSync(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
+			this.forEach(assertValidFilesAndIgnores);
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -705,13 +706,6 @@ export class ConfigArray extends Array {
 
 		if (finalConfig) {
 			return finalConfig;
-		}
-		
-		// check if files and ignores have been already validated, otherwise validate them
-		const configArrayCache = dataCache.get(this);
-		if (!configArrayCache.filesAndIgnoresValidated) {
-			this.forEach(assertValidFilesAndIgnores);
-			configArrayCache.filesAndIgnoresValidated = true;
 		}
 
 		// next check to see if the file should be ignored
