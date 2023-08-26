@@ -304,9 +304,9 @@ describe('ConfigArray', () => {
 
 		function testValidationError({ only = false, title, configs, expectedError }) {
 			
-			const it_ = only ? it.only : it;
+			const localIt = only ? it.only : it;
 			
-			it_(`${title} when calling normalize()`, async () => {
+			localIt(`${title} when calling normalize()`, async () => {
 				const configArray = new ConfigArray(configs, { basePath });
 
 				let actualError;
@@ -325,7 +325,7 @@ describe('ConfigArray', () => {
 
 			});
 
-			it_(`${title} when calling normalizeSync()`, () => {
+			localIt(`${title} when calling normalizeSync()`, () => {
 				const configArray = new ConfigArray(configs, { basePath });
 
 				expect(() => configArray.normalizeSync())
