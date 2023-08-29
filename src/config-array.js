@@ -13,6 +13,7 @@ import createDebug from 'debug';
 
 import { ObjectSchema } from '@humanwhocodes/object-schema';
 import { baseSchema } from './base-schema.js';
+import { filesAndIgnoresSchema } from './files-and-ignores-schema.js';
 
 //------------------------------------------------------------------------------
 // Helpers
@@ -30,6 +31,8 @@ const MINIMATCH_OPTIONS = {
 
 const CONFIG_TYPES = new Set(['array', 'function']);
 
+const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
+
 /**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
@@ -40,15 +43,23 @@ function isString(value) {
 }
 
 /**
- * Asserts that the files key of a config object is a nonempty array.
+ * Asserts that the files and ignores keys of a config object are valid as per base schema.
  * @param {object} config The config object to check.
  * @returns {void}
- * @throws {TypeError} If the files key isn't a nonempty array. 
+ * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
-function assertNonEmptyFilesArray(config) {
-	if (!Array.isArray(config.files) || config.files.length === 0) {
-		throw new TypeError('The files key must be a non-empty array.');
+function assertValidFilesAndIgnores(config) {
+	if (!config || typeof config !== 'object') {
+		return;
 	}
+	const validateConfig = { };
+	if ('files' in config) {
+		validateConfig.files = config.files;
+	}
+	if ('ignores' in config) {
+		validateConfig.ignores = config.ignores;
+	}
+	FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
 }
 
 /**
@@ -267,9 +278,6 @@ function pathMatches(filePath, basePath, config) {
 	 * file path.
 	 */
 	const relativeFilePath = path.relative(basePath, filePath);
-
-	// if files isn't an array, throw an error
-	assertNonEmptyFilesArray(config);
 
 	// match both strings and functions
 	const match = pattern => {
@@ -577,6 +585,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = await normalize(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
+			this.forEach(assertValidFilesAndIgnores);
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -598,6 +607,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = normalizeSync(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
+			this.forEach(assertValidFilesAndIgnores);
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -745,8 +755,6 @@ export class ConfigArray extends Array {
 				debug(`Skipped config found for ${filePath} (based on ignores: ${config.ignores})`);
 				return;
 			}
-
-			assertNonEmptyFilesArray(config);
 
 			/*
 			 * If a config has a files pattern ending in /** or /*, and the

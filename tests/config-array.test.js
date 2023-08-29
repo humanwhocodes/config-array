@@ -185,7 +185,7 @@ describe('ConfigArray', () => {
 		it('should not throw an error when objects are allowed', async () => {
 			configs = new ConfigArray([
 				{
-					files: '*.js'
+					files: ['*.js']
 				}
 			], {
 				basePath
@@ -198,7 +198,7 @@ describe('ConfigArray', () => {
 			configs = new ConfigArray([
 				[
 					{
-						files: '*.js'
+						files: ['*.js']
 					}
 				]
 			], {
@@ -301,11 +301,117 @@ describe('ConfigArray', () => {
 	});
 
 	describe('Validation', () => {
-		it('should throw an error when files is not an array', async () => {
-			configs = new ConfigArray([
+
+		function testValidationError({ only = false, title, configs, expectedError }) {
+			
+			const localIt = only ? it.only : it;
+			
+			localIt(`${title} when calling normalize()`, async () => {
+				const configArray = new ConfigArray(configs, { basePath });
+
+				let actualError;
+				try {
+					await configArray.normalize();
+				} catch (error) {
+					actualError = error;
+				}
+				expect(() => {
+					if (actualError) {
+						throw actualError;
+					}
+				})
+					.to
+					.throw(expectedError);
+
+			});
+
+			localIt(`${title} when calling normalizeSync()`, () => {
+				const configArray = new ConfigArray(configs, { basePath });
+
+				expect(() => configArray.normalizeSync())
+					.to
+					.throw(expectedError);
+
+			});
+		}
+
+		testValidationError({
+			title: 'should throw an error when files is not an array',
+			configs: [
 				{
 					files: '*.js'
 				}
+			],
+			expectedError: /non-empty array/
+		});
+
+		testValidationError({
+			title: 'should throw an error when files is an empty array',
+			configs: [
+				{
+					files: []
+				}
+			],
+			expectedError: /non-empty array/
+		});
+
+		testValidationError({
+			title: 'should throw an error when files is undefined',
+			configs: [
+				{
+					files: undefined
+				}
+			],
+			expectedError: /non-empty array/
+		});
+
+		testValidationError({
+			title: 'should throw an error when files contains an invalid element',
+			configs: [
+				{
+					files: ['*.js', undefined]
+				}
+			],
+			expectedError: 'Key "files": Items must be a string, a function, or an array of strings and functions.'
+		});
+
+		testValidationError({
+			title: 'should throw an error when ignores is undefined',
+			configs: [
+				{
+					ignores: undefined
+				}
+			],
+			expectedError: 'Key "ignores": Expected value to be an array.'
+		});
+
+		testValidationError({
+			title: 'should throw an error when a global ignores contains an invalid element',
+			configs: [
+				{
+					ignores: ['ignored/**', -1]
+				}
+			],
+			expectedError: 'Key "ignores": Expected array to only contain strings and functions.'
+		});
+
+		testValidationError({
+			title: 'should throw an error when a non-global ignores contains an invalid element',
+			configs: [
+				{
+					files: ['*.js'],
+					ignores: [-1]
+				}
+			],
+			expectedError: 'Key "ignores": Expected array to only contain strings and functions.'
+		});
+
+		it('should throw an error when a config is not an object', async () => {
+			configs = new ConfigArray([
+				{
+					files: ['*.js']
+				},
+				'eslint:reccommended' // typo
 			], { basePath });
 			await configs.normalize();
 
@@ -313,14 +419,15 @@ describe('ConfigArray', () => {
 				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
-				.throw(/non-empty array/);
+				.throw('All arguments must be objects.');
 
 		});
 
-		it('should throw an error when files is an empty array', async () => {
+		it('should throw an error when name is not a string', async () => {
 			configs = new ConfigArray([
 				{
-					files: []
+					files: ['**'],
+					name: true
 				}
 			], { basePath });
 			await configs.normalize();
@@ -329,7 +436,7 @@ describe('ConfigArray', () => {
 				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
-				.throw(/non-empty array/);
+				.throw('Key "name": Property must be a string.');
 
 		});
 	});
