@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.11](https://github.com/humanwhocodes/config-array/compare/v0.11.10...v0.11.11) (2023-08-29)
+
+
+### Bug Fixes
+
+* validate `files` and `ignores` elements ([#103](https://github.com/humanwhocodes/config-array/issues/103)) ([c40894f](https://github.com/humanwhocodes/config-array/commit/c40894ff86d1635c45649ac1f3c03a274e2529d9))
+
 ## [0.11.10](https://github.com/humanwhocodes/config-array/compare/v0.11.9...v0.11.10) (2023-06-01)
 
 
