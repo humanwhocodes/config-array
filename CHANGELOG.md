@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.12](https://github.com/humanwhocodes/config-array/compare/v0.11.11...v0.11.12) (2023-10-19)
+
+
+### Bug Fixes
+
+* caching of ignored files ([#111](https://github.com/humanwhocodes/config-array/issues/111)) ([839d838](https://github.com/humanwhocodes/config-array/commit/839d838e607cf5fb69d1acd314d6bb7aa20bc042))
+
 ## [0.11.11](https://github.com/humanwhocodes/config-array/compare/v0.11.10...v0.11.11) (2023-08-29)
 
 
