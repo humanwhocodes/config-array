@@ -702,11 +702,11 @@ export class ConfigArray extends Array {
 		const cache = this[ConfigArraySymbol.configCache];
 
 		// first check the cache for a filename match to avoid duplicate work
-		let finalConfig = cache.get(filePath);
-
-		if (finalConfig) {
-			return finalConfig;
+		if (cache.has(filePath)) {
+			return cache.get(filePath);
 		}
+
+		let finalConfig;
 
 		// next check to see if the file should be ignored
 
