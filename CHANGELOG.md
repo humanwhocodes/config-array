@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.13](https://github.com/humanwhocodes/config-array/compare/v0.11.12...v0.11.13) (2023-10-20)
+
+
+### Bug Fixes
+
+* **deps:** Upgrade object-schema to restore custom properties on errors ([d6d0b6a](https://github.com/humanwhocodes/config-array/commit/d6d0b6a415ef191ef9acd9169aec0827b86dcad3))
+
 ## [0.11.12](https://github.com/humanwhocodes/config-array/compare/v0.11.11...v0.11.12) (2023-10-19)
 
 
