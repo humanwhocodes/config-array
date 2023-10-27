@@ -884,6 +884,54 @@ describe('ConfigArray', () => {
 
 			});	
 
+			// https://github.com/eslint/eslint/issues/17669
+			describe('basePath is an empty string', () => {
+
+				beforeEach(() => {
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							defs: {
+								severity: 'error'
+							}
+						}
+					], { basePath: '', schema });
+	
+					configs.normalizeSync();
+				});
+
+				it('should return a config when a filename matches a files pattern', () => {
+
+					const config = configs.getConfig('foo.js');
+					expect(config).to.deep.equal({
+						defs: {
+							severity: 'error'
+						}
+					});
+				});
+
+				it('should return a config when a relative path filename matches a files pattern', () => {
+
+					const config = configs.getConfig('x/foo.js');
+					expect(config).to.deep.equal({
+						defs: {
+							severity: 'error'
+						}
+					});
+				});
+
+				it('should return a config when an absolute path filename matches a files pattern', () => {
+
+					const config = configs.getConfig('/x/foo.js');
+					expect(config).to.deep.equal({
+						defs: {
+							severity: 'error'
+						}
+					});
+				});
+
+			});
+
 		});
 
 		describe('isIgnored()', () => {
@@ -1740,6 +1788,36 @@ describe('ConfigArray', () => {
 				const filename = path.resolve(basePath, 'fixtures/test.xsl');
 
 				expect(configs.isExplicitMatch(filename)).to.be.false;
+			});
+
+			// https://github.com/eslint/eslint/issues/17669
+			describe('basePath is an empty string', () => {
+
+				beforeEach(() => {
+					configs = new ConfigArray([
+						{
+							files: ['**/*.js'],
+							defs: {
+								severity: 'error'
+							}
+						}
+					], { basePath: '', schema });
+
+					configs.normalizeSync();
+				});
+
+				it('should return true when a filename matches a files pattern', () => {
+					expect(configs.isExplicitMatch('foo.js')).to.be.true;
+				});
+
+				it('should return true when a relative path filename matches a files pattern', () => {
+					expect(configs.isExplicitMatch('x/foo.js')).to.be.true;
+				});
+
+				it('should return true when an absolute path filename matches a files pattern', () => {
+					expect(configs.isExplicitMatch('/x/foo.js')).to.be.true;
+				});
+
 			});
 
 		});
