@@ -1291,6 +1291,240 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
 			});
 
+			it('should return false when file has the same name as a directory that is ignored by a pattern that ends with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/foo']
+					},
+					{
+						ignores: [
+							'foo/'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo'))).to.be.false;
+			});
+
+			it('should return false when file is in the parent directory of directories that are ignored by a pattern that ends with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/*/'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+			});
+
+			it('should return true when file is in a directory that is ignored by a pattern that ends with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			it('should return true when file is in a directory that is ignored by a pattern that does not end with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			it('should return false when file is in a directory that is ignored and then unignord by pattern that end with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/',
+							'!foo/'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+			});
+
+			it('should return true when file is in a directory that is ignored along its files by pattern that ends with `/**` and than unignored by pattern that ends with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/**',
+
+							// only the directory is unignored, files are not
+							'!foo/'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			it('should return true when file is in a directory that is ignored along its files by pattern that ends with `/**` and then unignored by pattern that does not ends with `/`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/**',
+
+							// only the directory is unignored, files are not
+							'!foo'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			it('should return false when file is in a directory that is ignored along its files by pattern that ends with `/**` and then unignored along its files by pattern that ends with `/**`', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo/**',
+
+							// both the directory and the files are unignored
+							'!foo/**'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+			});
+
+			it('should return true when file is ignored by a pattern and there are unignore patterns that target files of a directory with the same name', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/foo']
+					},
+					{
+						ignores: [
+							'foo',
+							'!foo/*',
+							'!foo/**'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo'))).to.be.true;
+			});
+
+			it('should return true when file is in a directory that is ignored even if an unignore pattern that ends with `/*` matches the file', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'foo',
+							'!foo/*'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+			});
+
+			// https://github.com/eslint/eslint/issues/17964#issuecomment-1879840650
+			it('should return true for all files ignored in a directory tree except for explicitly unignored ones', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+
+							// ignore all files and directories
+							'tests/format/**/*',
+
+							// unignore all directories
+							'!tests/format/**/*/',
+
+							// unignore specific files
+							'!tests/format/**/jsfmt.spec.js'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/foo.js'))).to.be.true;
+				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/jsfmt.spec.js'))).to.be.false;
+				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/subdir/foo.js'))).to.be.true;
+				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/subdir/jsfmt.spec.js'))).to.be.false;
+			});
+
 			// https://github.com/eslint/eslint/pull/16579/files
 			describe('gitignore-style unignores', () => {
 
@@ -1555,7 +1789,7 @@ describe('ConfigArray', () => {
 			});
 
 
-			it('should return true when an ignored directory is later negated with **', () => {
+			it('should return true when a directory in an ignored directory is later negated with **', () => {
 				configs = new ConfigArray([
 					{
 						files: ['**/*.js']
@@ -1567,6 +1801,8 @@ describe('ConfigArray', () => {
 					},
 					{
 						ignores: [
+
+							// this unignores  `node_modules/package/`, but its parent `node_modules/` is still ignored
 							'!node_modules/package/**'
 						]
 					}
@@ -1578,6 +1814,56 @@ describe('ConfigArray', () => {
 
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package'))).to.be.true;
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/package/'))).to.be.true;
+			});
+
+			it('should return false when a directory is later negated with **', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/**'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules'))).to.be.false;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/'))).to.be.false;
+			});
+
+			it('should return true when a directory content is later negated with *', () => {
+				configs = new ConfigArray([
+					{
+						files: ['**/*.js']
+					},
+					{
+						ignores: [
+							'**/node_modules/**'
+						]
+					},
+					{
+						ignores: [
+							'!node_modules/*'
+						]
+					}
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules'))).to.be.true;
+				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/'))).to.be.true;
 			});
 
 			it('should return true when an ignored directory is later unignored with *', () => {
