@@ -1367,7 +1367,7 @@ describe('ConfigArray', () => {
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
-			it('should return false when file is in a directory that is ignored and then unignord by pattern that end with `/`', () => {
+			it('should return false when file is in a directory that is ignored and then unignored by pattern that end with `/`', () => {
 				configs = new ConfigArray([
 					{
 						files: ['**/*.js']
