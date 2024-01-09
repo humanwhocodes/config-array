@@ -1841,7 +1841,7 @@ describe('ConfigArray', () => {
 				expect(configs.isDirectoryIgnored(path.join(basePath, 'node_modules/'))).to.be.false;
 			});
 
-			it('should return true when a directory's content is later negated with *', () => {
+			it('should return true when a directory\'s content is later negated with *', () => {
 				configs = new ConfigArray([
 					{
 						files: ['**/*.js']
