@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.14](https://github.com/humanwhocodes/config-array/compare/v0.11.13...v0.11.14) (2024-01-10)
+
+
+### Bug Fixes
+
+* behavior of global `ignores` ([#126](https://github.com/humanwhocodes/config-array/issues/126)) ([9b3c72c](https://github.com/humanwhocodes/config-array/commit/9b3c72c67ff41f77ee7df549d95c4ca45b36d1ed))
+* **deps:** Update object-schema ([8f0950a](https://github.com/humanwhocodes/config-array/commit/8f0950a253fd117e787e71f0c3bffe33942ce3a1))
+
 ## [0.11.13](https://github.com/humanwhocodes/config-array/compare/v0.11.12...v0.11.13) (2023-10-20)
 
 
