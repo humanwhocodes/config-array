@@ -49,7 +49,7 @@
   "devDependencies": {
     "@nitpik/javascript": "0.4.0",
     "@nitpik/node": "0.0.5",
-    "chai": "4.3.10",
+    "chai": "5.1.0",
     "eslint": "8.52.0",
     "esm": "3.2.25",
     "lint-staged": "15.0.2",
