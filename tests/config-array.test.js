@@ -372,7 +372,7 @@ describe('ConfigArray', () => {
 					files: ['*.js', undefined]
 				}
 			],
-			expectedError: 'Key "files": Items must be a string, a function, or an array of strings and functions.'
+			expectedError: 'Config "0": Key "files": Items must be a string, a function, or an array of strings and functions.'
 		});
 
 		testValidationError({
@@ -382,28 +382,30 @@ describe('ConfigArray', () => {
 					ignores: undefined
 				}
 			],
-			expectedError: 'Key "ignores": Expected value to be an array.'
+			expectedError: 'Config "0": Key "ignores": Expected value to be an array.'
 		});
 
 		testValidationError({
 			title: 'should throw an error when a global ignores contains an invalid element',
 			configs: [
 				{
+					name: 'foo',
 					ignores: ['ignored/**', -1]
 				}
 			],
-			expectedError: 'Key "ignores": Expected array to only contain strings and functions.'
+			expectedError: 'Config "foo": Key "ignores": Expected array to only contain strings and functions.'
 		});
 
 		testValidationError({
 			title: 'should throw an error when a non-global ignores contains an invalid element',
 			configs: [
 				{
+					name: 'foo',
 					files: ['*.js'],
 					ignores: [-1]
 				}
 			],
-			expectedError: 'Key "ignores": Expected array to only contain strings and functions.'
+			expectedError: 'Config "foo": Key "ignores": Expected array to only contain strings and functions.'
 		});
 
 		it('should throw an error when a config is not an object', async () => {
@@ -436,7 +438,7 @@ describe('ConfigArray', () => {
 				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
-				.throw('Key "name": Property must be a string.');
+				.throw('Config "0": Key "name": Property must be a string.');
 
 		});
 	});
@@ -730,6 +732,25 @@ describe('ConfigArray', () => {
 				expect(config.defs.name).to.equal('async-from-context');
 				expect(config.defs.css).to.be.false;
 				expect(config.defs.universal).to.be.true;
+			});
+
+			it('should throw an error when defs doesn\'t pass validation', async () => {
+				const configs = new ConfigArray([
+					{
+						files: ['**/*.js'],
+						defs: 'foo',
+						name: 'bar'
+					}
+				], { basePath, schema });
+
+				await configs.normalize();
+
+				const filename = path.resolve(basePath, 'foo.js');
+				expect(() => {
+					configs.getConfig(filename);
+				})
+					.to
+					.throw('Config "bar": Key "defs": Object expected.');
 			});
 
 			it('should calculate correct config when passed JS filename that matches a function config returning an array', () => {

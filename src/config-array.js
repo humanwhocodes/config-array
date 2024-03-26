@@ -34,6 +34,29 @@ const CONFIG_TYPES = new Set(['array', 'function']);
 const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
 
 /**
+ * Wrapper error for validation errors that adds a name to the front of the
+ * error message.
+ */
+class ConfigError extends Error {
+
+	/**
+	 * Creates a new instance.
+	 * @param {string} name The config object name causing the error. 
+	 * @param {Error} source The source error. 
+	 */
+	constructor(name, source) {
+		super(`Config "${name}": ${source.message}`, { cause: source });
+
+		// copy over custom properties that aren't represented
+		for (const key of Object.keys(source)) {
+			if (!(key in this)) {
+				this[key] = source[key];
+			}
+		}
+	}
+}
+
+/**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
  * @returns {boolean} True if a string, false if not. 
@@ -45,21 +68,31 @@ function isString(value) {
 /**
  * Asserts that the files and ignores keys of a config object are valid as per base schema.
  * @param {object} config The config object to check.
+ * @param {number} index The index of the config object in the array.
  * @returns {void}
  * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
-function assertValidFilesAndIgnores(config) {
+function assertValidFilesAndIgnores(config, index) {
 	if (!config || typeof config !== 'object') {
 		return;
 	}
+	
 	const validateConfig = { };
+	
 	if ('files' in config) {
 		validateConfig.files = config.files;
 	}
+	
 	if ('ignores' in config) {
 		validateConfig.ignores = config.ignores;
 	}
-	FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
+
+	try {
+		FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
+	} catch (validationError) {
+		const reportedName = typeof config.name === 'string' && config.name ? config.name : index;
+		throw new ConfigError(reportedName, validationError);
+	}
 }
 
 /**
@@ -809,7 +842,13 @@ export class ConfigArray extends Array {
 		// otherwise construct the config
 
 		finalConfig = matchingConfigIndices.reduce((result, index) => {
-			return this[ConfigArraySymbol.schema].merge(result, this[index]);
+			try {
+				return this[ConfigArraySymbol.schema].merge(result, this[index]);
+			} catch (validationError) {
+				const configName = this[index].name;
+				const reportedName = typeof configName === 'string' && configName ? configName : index;
+				throw new ConfigError(reportedName, validationError);
+			}
 		}, {}, this);
 
 		finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
