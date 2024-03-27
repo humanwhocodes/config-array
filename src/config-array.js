@@ -34,7 +34,7 @@ const CONFIG_TYPES = new Set(['array', 'function']);
 const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
 
 /**
- * Wrapper error for validation errors that adds a name to the front of the
+ * Wrapper error for config validation errors that adds a name to the front of the
  * error message.
  */
 class ConfigError extends Error {
@@ -57,6 +57,69 @@ class ConfigError extends Error {
 }
 
 /**
+ * Wrapper error for base config validation errors that adds a name to the front of the
+ * error message.
+ */
+class BaseConfigError extends Error {
+
+	/**
+	 * Creates a new instance.
+	 * @param {string} name The config object name causing the error. 
+	 * @param {Error} source The source error. 
+	 */
+	constructor(name, source) {
+		super(`Base Config "${name}": ${source.message}`, { cause: source });
+
+		// copy over custom properties that aren't represented
+		for (const key of Object.keys(source)) {
+			if (!(key in this)) {
+				this[key] = source[key];
+			}
+		}
+	}
+}
+
+/**
+ * Gets the name of a config object.
+ * @param {object} config The config object to get the name of.
+ * @param {number} index The index of the config object in the array.
+ * @param {number} baseConfigLength The number of base configs in the array.
+ * @returns {string|number} The name of the config object.
+ */ 
+function getConfigName(config, index, baseConfigLength) {
+	if (typeof config.name === 'string' && config.name) {
+		return config.name;
+	}
+
+	if (index < baseConfigLength) {
+		return index;
+	}
+
+	return index - baseConfigLength;
+}
+
+
+/**
+ * Rethrows a config error with additional information about the config object.
+ * @param {object} config The config object to get the name of. 
+ * @param {number} index The index of the config object in the array.
+ * @param {number} baseConfigLength The number of base configs in the array.
+ * @param {Error} error The error to rethrow.
+ * @throws {ConfigError} When the error is rethrown for a config.
+ * @throws {BaseConfigError} When the error is rethrown for a base config.
+ */
+function rethrowConfigError(config, index, baseConfigLength, error) {
+
+	const configName = getConfigName(config, index, baseConfigLength);
+
+	if (index < baseConfigLength) {
+		throw new BaseConfigError(configName, error);
+	}
+
+	throw new ConfigError(configName, error);
+}
+
+/**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
  * @returns {boolean} True if a string, false if not. 
@@ -66,33 +129,36 @@ function isString(value) {
 }
 
 /**
- * Asserts that the files and ignores keys of a config object are valid as per base schema.
- * @param {object} config The config object to check.
- * @param {number} index The index of the config object in the array.
- * @returns {void}
+ * Creates a function that asserts that the files and ignores keys 
+ * of a config object are valid as per base schema.
+ * @param {number} baseConfigLength The number of base configs in the array.
+ * @returns {(config: object, index: number) => void} A function that checks the config object.
  * @throws {TypeError} If the files and ignores keys of a config object are not valid.
  */
-function assertValidFilesAndIgnores(config, index) {
-	if (!config || typeof config !== 'object') {
-		return;
-	}
-	
-	const validateConfig = { };
-	
-	if ('files' in config) {
-		validateConfig.files = config.files;
-	}
-	
-	if ('ignores' in config) {
-		validateConfig.ignores = config.ignores;
-	}
+function assertValidFilesAndIgnores(baseConfigLength) {
 
-	try {
-		FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
-	} catch (validationError) {
-		const reportedName = typeof config.name === 'string' && config.name ? config.name : index;
-		throw new ConfigError(reportedName, validationError);
-	}
+	return (config, index) => {
+			
+		if (!config || typeof config !== 'object') {
+			return;
+		}
+		
+		const validateConfig = { };
+		
+		if ('files' in config) {
+			validateConfig.files = config.files;
+		}
+		
+		if ('ignores' in config) {
+			validateConfig.ignores = config.ignores;
+		}
+
+		try {
+			FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
+		} catch (validationError) {
+			rethrowConfigError(config, index, baseConfigLength, validationError);
+		}
+	};
 }
 
 /**
@@ -386,7 +452,8 @@ export const ConfigArraySymbol = {
 	configCache: Symbol('configCache'),
 	schema: Symbol('schema'),
 	finalizeConfig: Symbol('finalizeConfig'),
-	preprocessConfig: Symbol('preprocessConfig')
+	preprocessConfig: Symbol('preprocessConfig'),
+	baseConfigLength: Symbol('baseConfigLength')
 };
 
 // used to store calculate data for faster lookup
@@ -421,7 +488,7 @@ export class ConfigArray extends Array {
 		/**
 		 * Tracks if the array has been normalized.
 		 * @property isNormalized
-		 * @type boolean
+		 * @type {boolean}
 		 * @private
 		 */
 		this[ConfigArraySymbol.isNormalized] = normalized;
@@ -440,7 +507,7 @@ export class ConfigArray extends Array {
 		 * The path of the config file that this array was loaded from.
 		 * This is used to calculate filename matches.
 		 * @property basePath
-		 * @type string
+		 * @type {string}
 		 */
 		this.basePath = basePath;
 
@@ -449,14 +516,14 @@ export class ConfigArray extends Array {
 		/**
 		 * The supported config types.
 		 * @property configTypes
-		 * @type Array<string>
+		 * @type {Array<string>}
 		 */
 		this.extraConfigTypes = Object.freeze([...extraConfigTypes]);
 
 		/**
 		 * A cache to store calculated configs for faster repeat lookup.
 		 * @property configCache
-		 * @type Map
+		 * @type {Map<string, Object>}
 		 * @private
 		 */
 		this[ConfigArraySymbol.configCache] = new Map();
@@ -475,6 +542,15 @@ export class ConfigArray extends Array {
 		} else {
 			this.push(configs);
 		}
+
+		/**
+		 * The number of base configs in the array.
+		 * @property baseConfigLength
+		 * @type {number}
+		 * @private
+		 * @readonly
+		 */
+		this[ConfigArraySymbol.baseConfigLength] = this.length;
 
 	}
 
@@ -587,7 +663,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = await normalize(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
-			this.forEach(assertValidFilesAndIgnores);
+			this.forEach(assertValidFilesAndIgnores(this[ConfigArraySymbol.baseConfigLength]));
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -609,7 +685,7 @@ export class ConfigArray extends Array {
 			const normalizedConfigs = normalizeSync(this, context, this.extraConfigTypes);
 			this.length = 0;
 			this.push(...normalizedConfigs.map(this[ConfigArraySymbol.preprocessConfig].bind(this)));
-			this.forEach(assertValidFilesAndIgnores);
+			this.forEach(assertValidFilesAndIgnores(this[ConfigArraySymbol.baseConfigLength]));
 			this[ConfigArraySymbol.isNormalized] = true;
 
 			// prevent further changes
@@ -845,9 +921,7 @@ export class ConfigArray extends Array {
 			try {
 				return this[ConfigArraySymbol.schema].merge(result, this[index]);
 			} catch (validationError) {
-				const configName = this[index].name;
-				const reportedName = typeof configName === 'string' && configName ? configName : index;
-				throw new ConfigError(reportedName, validationError);
+				rethrowConfigError(this[index], index, this[ConfigArraySymbol.baseConfigLength], validationError);
 			}
 		}, {}, this);
 

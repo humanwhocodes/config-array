@@ -372,7 +372,7 @@ describe('ConfigArray', () => {
 					files: ['*.js', undefined]
 				}
 			],
-			expectedError: 'Config "0": Key "files": Items must be a string, a function, or an array of strings and functions.'
+			expectedError: 'Base Config "0": Key "files": Items must be a string, a function, or an array of strings and functions.'
 		});
 
 		testValidationError({
@@ -382,7 +382,7 @@ describe('ConfigArray', () => {
 					ignores: undefined
 				}
 			],
-			expectedError: 'Config "0": Key "ignores": Expected value to be an array.'
+			expectedError: 'Base Config "0": Key "ignores": Expected value to be an array.'
 		});
 
 		testValidationError({
@@ -393,7 +393,7 @@ describe('ConfigArray', () => {
 					ignores: ['ignored/**', -1]
 				}
 			],
-			expectedError: 'Config "foo": Key "ignores": Expected array to only contain strings and functions.'
+			expectedError: 'Base Config "foo": Key "ignores": Expected array to only contain strings and functions.'
 		});
 
 		testValidationError({
@@ -425,13 +425,31 @@ describe('ConfigArray', () => {
 
 		});
 
-		it('should throw an error when name is not a string', async () => {
+		it('should throw an error when base config name is not a string', async () => {
 			configs = new ConfigArray([
 				{
 					files: ['**'],
 					name: true
 				}
 			], { basePath });
+			await configs.normalize();
+
+			expect(() => {
+				configs.getConfig(path.resolve(basePath, 'foo.js'));
+			})
+				.to
+				.throw('Base Config "0": Key "name": Property must be a string.');
+
+		});
+
+		it('should throw an error when additional config name is not a string', async () => {
+			configs = new ConfigArray([{}], { basePath });
+			configs.push(
+				{
+					files: ['**'],
+					name: true
+				}
+			);
 			await configs.normalize();
 
 			expect(() => {
