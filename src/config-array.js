@@ -41,7 +41,7 @@ class ConfigError extends Error {
 
 	/**
 	 * Creates a new instance.
-	 * @param {string} name The config object name causing the error. 
+	 * @param {string|number} name The config object name or index causing the error. 
 	 * @param {Error} source The source error. 
 	 */
 	constructor(name, source) {
@@ -133,7 +133,8 @@ function isString(value) {
  * of a config object are valid as per base schema.
  * @param {number} baseConfigLength The number of base configs in the array.
  * @returns {(config: object, index: number) => void} A function that checks the config object.
- * @throws {TypeError} If the files and ignores keys of a config object are not valid.
+ * @throws {ConfigError} If the files and ignores keys of a config object are not valid.
+ * @throws {BaseConfigError} If the files and ignores keys of a base config object are not valid.
  */
 function assertValidFilesAndIgnores(baseConfigLength) {
 
