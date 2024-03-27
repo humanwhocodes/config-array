@@ -41,7 +41,7 @@ class ConfigError extends Error {
 
 	/**
 	 * Creates a new instance.
-	 * @param {string} name The config object name causing the error. 
+	 * @param {string|number} name The config object name or index causing the error. 
 	 * @param {Error} source The source error. 
 	 */
 	constructor(name, source) {
