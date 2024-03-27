@@ -70,7 +70,7 @@ function isString(value) {
  * @param {object} config The config object to check.
  * @param {number} index The index of the config object in the array.
  * @returns {void}
- * @throws {TypeError} If the files and ignores keys of a config object are not valid.
+ * @throws {ConfigError} If the files and ignores keys of a config object are not valid.
  */
 function assertValidFilesAndIgnores(config, index) {
 	if (!config || typeof config !== 'object') {
