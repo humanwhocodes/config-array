@@ -91,7 +91,6 @@ function getConfigName(config) {
  * @param {number} index The index of the config object in the array.
  * @param {Error} error The error to rethrow.
  * @throws {ConfigError} When the error is rethrown for a config.
- * @throws {BaseConfigError} When the error is rethrown for a base config.
  */
 function rethrowConfigError(config, index, error) {
 	const configName = getConfigName(config, index);
