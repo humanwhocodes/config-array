@@ -81,7 +81,7 @@ function getConfigName(config) {
 		return `"${config.name}"`;
 	}
 
-	return '(unknown)';
+	return '(unnamed)';
 }
 
 

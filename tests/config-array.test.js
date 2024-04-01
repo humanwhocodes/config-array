@@ -373,7 +373,7 @@ describe('ConfigArray', () => {
 					files: ['*.js', undefined]
 				}
 			],
-			expectedError: 'Config (unknown): Key "files": Items must be a string, a function, or an array of strings and functions.'
+			expectedError: 'Config (unnamed): Key "files": Items must be a string, a function, or an array of strings and functions.'
 		});
 
 		testValidationError({
@@ -383,7 +383,7 @@ describe('ConfigArray', () => {
 					ignores: undefined
 				}
 			],
-			expectedError: 'Config (unknown): Key "ignores": Expected value to be an array.'
+			expectedError: 'Config (unnamed): Key "ignores": Expected value to be an array.'
 		});
 
 		testValidationError({
@@ -439,7 +439,7 @@ describe('ConfigArray', () => {
 				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
-				.throw('Config (unknown): Key "name": Property must be a string.');
+				.throw('Config (unnamed): Key "name": Property must be a string.');
 
 		});
 
@@ -457,7 +457,7 @@ describe('ConfigArray', () => {
 				configs.getConfig(path.resolve(basePath, 'foo.js'));
 			})
 				.to
-				.throw('Config (unknown): Key "name": Property must be a string.');
+				.throw('Config (unnamed): Key "name": Property must be a string.');
 
 		});
 	});
