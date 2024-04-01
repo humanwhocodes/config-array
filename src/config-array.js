@@ -34,6 +34,70 @@ const CONFIG_TYPES = new Set(['array', 'function']);
 const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
 
 /**
+ * Wrapper error for config validation errors that adds a name to the front of the
+ * error message.
+ */
+class ConfigError extends Error {
+
+	/**
+	 * Creates a new instance.
+	 * @param {string} name The config object name causing the error.
+	 * @param {number} index The index of the config object in the array.
+	 * @param {Error} source The source error. 
+	 */
+	constructor(name, index, source) {
+		super(`Config ${name}: ${source.message}`, { cause: source });
+
+		// copy over custom properties that aren't represented
+		for (const key of Object.keys(source)) {
+			if (!(key in this)) {
+				this[key] = source[key];
+			}
+		}
+
+		/**
+		 * The name of the error.
+		 * @type {string}
+		 * @readonly
+		 */
+		this.name = 'ConfigError';
+
+		/**
+		 * The index of the config object in the array.
+		 * @type {number}
+		 * @readonly
+		 */
+		this.index = index;
+	}
+}
+
+/**
+ * Gets the name of a config object.
+ * @param {object} config The config object to get the name of.
+ * @returns {string} The name of the config object.
+ */ 
+function getConfigName(config) {
+	if (typeof config.name === 'string' && config.name) {
+		return `"${config.name}"`;
+	}
+
+	return '(unnamed)';
+}
+
+
+/**
+ * Rethrows a config error with additional information about the config object.
+ * @param {object} config The config object to get the name of. 
+ * @param {number} index The index of the config object in the array.
+ * @param {Error} error The error to rethrow.
+ * @throws {ConfigError} When the error is rethrown for a config.
+ */
+function rethrowConfigError(config, index, error) {
+	const configName = getConfigName(config);
+	throw new ConfigError(configName, index, error);
+}
+
+/**
  * Shorthand for checking if a value is a string.
  * @param {any} value The value to check.
  * @returns {boolean} True if a string, false if not. 
@@ -43,23 +107,34 @@ function isString(value) {
 }
 
 /**
- * Asserts that the files and ignores keys of a config object are valid as per base schema.
- * @param {object} config The config object to check.
+ * Creates a function that asserts that the files and ignores keys 
+ * of a config object are valid as per base schema.
+ * @param {Object} config The config object to check.
+ * @param {number} index The index of the config object in the array.
  * @returns {void}
- * @throws {TypeError} If the files and ignores keys of a config object are not valid.
+ * @throws {ConfigError} If the files and ignores keys of a config object are not valid.
  */
-function assertValidFilesAndIgnores(config) {
+function assertValidFilesAndIgnores(config, index) {
+
 	if (!config || typeof config !== 'object') {
 		return;
 	}
+	
 	const validateConfig = { };
+	
 	if ('files' in config) {
 		validateConfig.files = config.files;
 	}
+	
 	if ('ignores' in config) {
 		validateConfig.ignores = config.ignores;
 	}
-	FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
+
+	try {
+		FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
+	} catch (validationError) {
+		rethrowConfigError(config, index, validationError);
+	}
 }
 
 /**
@@ -388,7 +463,7 @@ export class ConfigArray extends Array {
 		/**
 		 * Tracks if the array has been normalized.
 		 * @property isNormalized
-		 * @type boolean
+		 * @type {boolean}
 		 * @private
 		 */
 		this[ConfigArraySymbol.isNormalized] = normalized;
@@ -407,7 +482,7 @@ export class ConfigArray extends Array {
 		 * The path of the config file that this array was loaded from.
 		 * This is used to calculate filename matches.
 		 * @property basePath
-		 * @type string
+		 * @type {string}
 		 */
 		this.basePath = basePath;
 
@@ -416,14 +491,14 @@ export class ConfigArray extends Array {
 		/**
 		 * The supported config types.
 		 * @property configTypes
-		 * @type Array<string>
+		 * @type {Array<string>}
 		 */
 		this.extraConfigTypes = Object.freeze([...extraConfigTypes]);
 
 		/**
 		 * A cache to store calculated configs for faster repeat lookup.
 		 * @property configCache
-		 * @type Map
+		 * @type {Map<string, Object>}
 		 * @private
 		 */
 		this[ConfigArraySymbol.configCache] = new Map();
@@ -809,7 +884,11 @@ export class ConfigArray extends Array {
 		// otherwise construct the config
 
 		finalConfig = matchingConfigIndices.reduce((result, index) => {
-			return this[ConfigArraySymbol.schema].merge(result, this[index]);
+			try {
+				return this[ConfigArraySymbol.schema].merge(result, this[index]);
+			} catch (validationError) {
+				rethrowConfigError(this[index], index, validationError);
+			}
 		}, {}, this);
 
 		finalConfig = this[ConfigArraySymbol.finalizeConfig](finalConfig);
