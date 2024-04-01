@@ -114,7 +114,6 @@ function isString(value) {
  * @param {number} index The index of the config object in the array.
  * @returns {void}
  * @throws {ConfigError} If the files and ignores keys of a config object are not valid.
- * @throws {BaseConfigError} If the files and ignores keys of a base config object are not valid.
  */
 function assertValidFilesAndIgnores(config, index) {
 
