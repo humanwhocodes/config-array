@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/humanwhocodes/config-array/compare/v0.12.0...v0.12.1) (2024-04-01)
+
+
+### Bug Fixes
+
+* **deps:** Ensure unnecessary files are not packaged ([6c26fef](https://github.com/humanwhocodes/config-array/commit/6c26fef4f5367eeba48ff782e44f914b47e278bf))
+
 ## [0.12.0](https://github.com/humanwhocodes/config-array/compare/v0.11.14...v0.12.0) (2024-04-01)
 
 
