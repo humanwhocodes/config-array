@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/humanwhocodes/config-array/compare/v0.11.14...v0.12.0) (2024-04-01)
+
+
+### Features
+
+* Report config name in error messages ([#128](https://github.com/humanwhocodes/config-array/issues/128)) ([58f8c9f](https://github.com/humanwhocodes/config-array/commit/58f8c9f8c06cbc6c67dfefe71b719bc6a940b7b3))
+
 ## [0.11.14](https://github.com/humanwhocodes/config-array/compare/v0.11.13...v0.11.14) (2024-01-10)
 
 
