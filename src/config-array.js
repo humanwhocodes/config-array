@@ -93,7 +93,7 @@ function getConfigName(config) {
  * @throws {ConfigError} When the error is rethrown for a config.
  */
 function rethrowConfigError(config, index, error) {
-	const configName = getConfigName(config, index);
+	const configName = getConfigName(config);
 	throw new ConfigError(configName, index, error);
 }
 
