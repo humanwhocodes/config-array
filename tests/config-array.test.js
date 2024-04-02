@@ -2116,6 +2116,22 @@ describe('ConfigArray', () => {
 				expect(ignores).to.deep.equal(expectedIgnores);
 
 			});
+
+			it('should ignore name field for when considering global ignores', () => {
+				configs = new ConfigArray([
+					{
+						name: 'foo',
+						ignores: ['ignoreme']
+					},
+				], {
+					basePath
+				});
+
+				configs.normalizeSync();
+
+				expect(configs.isFileIgnored(path.join(basePath, 'ignoreme/foo.js'))).to.be.true;
+				expect(configs.ignores).to.eql(['ignoreme']);
+			});
 		});
 
 		describe('push()', () => {

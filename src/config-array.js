@@ -31,6 +31,11 @@ const MINIMATCH_OPTIONS = {
 
 const CONFIG_TYPES = new Set(['array', 'function']);
 
+/**
+ * Fields that are considered metadata and not part of the config object.
+ */
+const META_FIELDS = new Set(['name']);
+
 const FILES_AND_IGNORES_SCHEMA = new ObjectSchema(filesAndIgnoresSchema);
 
 /**
@@ -597,7 +602,7 @@ export class ConfigArray extends Array {
 			 * In this case, it acts list a globally ignored pattern. If there
 			 * are additional keys, then ignores act like exclusions.
 			 */
-			if (config.ignores && Object.keys(config).length === 1) {
+			if (config.ignores && Object.keys(config).filter(key => !META_FIELDS.has(key)).length === 1) {
 				result.push(...config.ignores);
 			}
 		}
