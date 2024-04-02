@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2](https://github.com/humanwhocodes/config-array/compare/v0.12.1...v0.12.2) (2024-04-02)
+
+
+### Bug Fixes
+
+* ignore `name` field for global `ignores` ([#131](https://github.com/humanwhocodes/config-array/issues/131)) ([286f489](https://github.com/humanwhocodes/config-array/commit/286f48970f2b2c35c3fae14c5081d29ac23d11cc))
+
 ## [0.12.1](https://github.com/humanwhocodes/config-array/compare/v0.12.0...v0.12.1) (2024-04-01)
 
 
