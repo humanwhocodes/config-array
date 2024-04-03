@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.3](https://github.com/humanwhocodes/config-array/compare/v0.12.2...v0.12.3) (2024-04-03)
+
+
+### Bug Fixes
+
+* don't match config with `ignores` and `name` only ([#133](https://github.com/humanwhocodes/config-array/issues/133)) ([3dabb4d](https://github.com/humanwhocodes/config-array/commit/3dabb4db2072a86d9b567205626ba0ed537bea2f))
+
 ## [0.12.2](https://github.com/humanwhocodes/config-array/compare/v0.12.1...v0.12.2) (2024-04-02)
 
 
