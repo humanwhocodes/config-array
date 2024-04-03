@@ -334,7 +334,7 @@ function pathMatchesIgnores(filePath, basePath, config) {
 	 */
 	const relativeFilePath = path.relative(basePath, filePath);
 
-	return Object.keys(config).length > 1 &&
+	return Object.keys(config).filter(key => !META_FIELDS.has(key)).length > 1 &&
 		!shouldIgnorePath(config.ignores, filePath, relativeFilePath);
 }
 
