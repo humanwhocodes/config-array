@@ -152,7 +152,7 @@ function assertValidBaseConfig(config, index) {
 	try {
 		FILES_AND_IGNORES_SCHEMA.validate(validateConfig);
 	} catch (validationError) {
-		rethrowConfigError(config, index, validationError);
+		rethrowConfigError(config, index, { cause: validationError });
 	}
 }
 
@@ -906,7 +906,7 @@ export class ConfigArray extends Array {
 			try {
 				return this[ConfigArraySymbol.schema].merge(result, this[index]);
 			} catch (validationError) {
-				rethrowConfigError(this[index], index, validationError);
+				rethrowConfigError(this[index], index, { cause: validationError});
 			}
 		}, {}, this);
 
