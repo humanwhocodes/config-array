@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.13.0](https://github.com/humanwhocodes/config-array/compare/v0.12.3...v0.13.0) (2024-04-17)
+
+
+### Bug Fixes
+
+* Throw friendly message for non-object configs ([#136](https://github.com/humanwhocodes/config-array/issues/136)) ([be918b6](https://github.com/humanwhocodes/config-array/commit/be918b6fa636a671a025354af7bbc69fa02842f7))
+* Update release version for breaking change ([0b803d4](https://github.com/humanwhocodes/config-array/commit/0b803d41db6c93051f48b65325cb1b438c4b550b))
+
+
+### Miscellaneous Chores
+
+* Update release version ([5cacca6](https://github.com/humanwhocodes/config-array/commit/5cacca6e005bd27ea08e2f03692232f915d1a7bb))
+
 ## [0.12.3](https://github.com/humanwhocodes/config-array/compare/v0.12.2...v0.12.3) (2024-04-03)
 
 
