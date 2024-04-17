@@ -416,13 +416,12 @@ describe('ConfigArray', () => {
 				},
 				'eslint:reccommended' // typo
 			], { basePath });
-			await configs.normalize();
 
 			expect(() => {
-				configs.getConfig(path.resolve(basePath, 'foo.js'));
+				configs.normalizeSync();
 			})
 				.to
-				.throw('All arguments must be objects.');
+				.throw('Config (unnamed): Unexpected non-object config.');
 
 		});
 
@@ -433,6 +432,7 @@ describe('ConfigArray', () => {
 					name: true
 				}
 			], { basePath });
+			
 			await configs.normalize();
 
 			expect(() => {
@@ -451,6 +451,7 @@ describe('ConfigArray', () => {
 					name: true
 				}
 			);
+			
 			await configs.normalize();
 
 			expect(() => {
@@ -458,6 +459,52 @@ describe('ConfigArray', () => {
 			})
 				.to
 				.throw('Config (unnamed): Key "name": Property must be a string.');
+
+		});
+
+		it('should throw an error when base config is undefined', async () => {
+			configs = new ConfigArray([undefined], { basePath });
+			
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.to
+				.throw('Config (unnamed): Unexpected undefined config.');
+
+		});
+
+		it('should throw an error when base config is null', async () => {
+			configs = new ConfigArray([null], { basePath });
+			
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.to
+				.throw('Config (unnamed): Unexpected null config.');
+
+		});
+
+		it('should throw an error when additional config is undefined', async () => {
+			configs = new ConfigArray([{}], { basePath });
+			configs.push(undefined);
+			
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.to
+				.throw('Config (unnamed): Unexpected undefined config.');
+
+		});
+
+		it('should throw an error when additional config is null', async () => {
+			configs = new ConfigArray([{}], { basePath });
+			configs.push(null);
+
+			expect(() => {
+				configs.normalizeSync();
+			})
+				.to
+				.throw('Config (unnamed): Unexpected null config.');
 
 		});
 	});
