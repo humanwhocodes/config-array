@@ -1105,46 +1105,71 @@ describe('ConfigArray', () => {
 					.throw(/normalized/);
 			});
 
+		});
+
+		describe('isFileConfigured()', () => {
+
+			it('should throw an error when not normalized', () => {
+				const filename = path.resolve(basePath, 'foo.js');
+
+				expect(() => {
+					unnormalizedConfigs.isFileConfigured(filename);
+				})
+					.to
+					.throw(/normalized/);
+			});
+
+		});
+
+		describe('isFileIgnored() / isFileConfigured()', () => {
+
 			it('should return false when passed JS filename', () => {
 				const filename = path.resolve(basePath, 'foo.js');
 
 				expect(configs.isFileIgnored(filename)).to.be.false;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return true when passed JS filename in parent directory', () => {
 				const filename = path.resolve(basePath, '../foo.js');
 
 				expect(configs.isFileIgnored(filename)).to.be.true;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return false when passed HTML filename', () => {
 				const filename = path.resolve(basePath, 'foo.html');
 
 				expect(configs.isFileIgnored(filename)).to.be.false;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return true when passed ignored .gitignore filename', () => {
 				const filename = path.resolve(basePath, '.gitignore');
 
 				expect(configs.isFileIgnored(filename)).to.be.true;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return false when passed CSS filename', () => {
 				const filename = path.resolve(basePath, 'foo.css');
 
 				expect(configs.isFileIgnored(filename)).to.be.false;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
-			it('should return true when passed docx filename', () => {
+			it('should return false when passed docx filename', () => {
 				const filename = path.resolve(basePath, 'sss.docx');
 
 				expect(configs.isFileIgnored(filename)).to.be.false;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return true when passed ignored node_modules filename', () => {
 				const filename = path.resolve(basePath, 'node_modules/foo.js');
 
 				expect(configs.isFileIgnored(filename)).to.be.true;
+				expect(configs.isFileConfigured(filename)).to.be.true;
 			});
 
 			it('should return true when passed matching both files and ignores in a config', () => {
@@ -1162,6 +1187,7 @@ describe('ConfigArray', () => {
 				const filename = path.resolve(basePath, 'fixtures/test.xsl');
 
 				expect(configs.isFileIgnored(filename)).to.be.true;
+				expect(configs.isFileConfigured(filename)).to.be.false;
 			});
 
 			it('should return false when negated pattern comes after matching pattern', () => {
@@ -1177,7 +1203,9 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'bar.txt'))).to.be.false;
 				expect(configs.isFileIgnored(path.join(basePath, 'foo.txt'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo.txt'))).to.be.true;
 			});
 
 			it('should return true when negated pattern comes before matching pattern', () => {
@@ -1192,7 +1220,9 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'bar.txt'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'bar.txt'))).to.be.true;
 				expect(configs.isFileIgnored(path.join(basePath, 'foo.txt'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo.txt'))).to.be.true;
 			});
 
 			it('should return false when matching files and ignores has a negated pattern comes after matching pattern', () => {
@@ -1208,10 +1238,12 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'bar.test.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'bar.test.js'))).to.be.false;
 				expect(configs.isFileIgnored(path.join(basePath, 'foo.test.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo.test.js'))).to.be.true;
 			});
 
-			it('should return false when file is inside of ignored directory', () => {
+			it('should return true when file is inside of ignored directory', () => {
 				configs = new ConfigArray([
 					{
 						ignores: ['ignoreme']
@@ -1226,6 +1258,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'ignoreme/foo.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'ignoreme/foo.js'))).to.be.true;
 			});
 
 			it('should return false when file is inside of ignored directory', () => {
@@ -1246,6 +1279,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/bar/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is ignored, unignored, and then reignored', () => {
@@ -1267,6 +1301,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'a.js'))).to.be.true;
 			});
 
 			it('should return true when the parent directory of a file is ignored', () => {
@@ -1286,6 +1321,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/bar/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/bar/a.js'))).to.be.true;
 			});
 
 			it('should return true when an ignored directory is later negated with **', () => {
@@ -1310,6 +1346,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'node_modules/package/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'node_modules/package/a.js'))).to.be.true;
 			});
 
 			it('should return true when an ignored directory is later negated with *', () => {
@@ -1334,6 +1371,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'node_modules/package/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'node_modules/package/a.js'))).to.be.true;
 			});
 
 			it('should return true when there are only patterns ending with /*', () => {
@@ -1362,6 +1400,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.false;
 			});
 
 			it('should return false when files pattern matches and there is a pattern ending with /**', () => {
@@ -1376,6 +1415,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return false when file has the same name as a directory that is ignored by a pattern that ends with `/`', () => {
@@ -1395,6 +1435,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo'))).to.be.true;
 			});
 
 			it('should return false when file is in the parent directory of directories that are ignored by a pattern that ends with `/`', () => {
@@ -1414,6 +1455,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is in a directory that is ignored by a pattern that ends with `/`', () => {
@@ -1433,6 +1475,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is in a directory that is ignored by a pattern that does not end with `/`', () => {
@@ -1452,6 +1495,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return false when file is in a directory that is ignored and then unignored by pattern that end with `/`', () => {
@@ -1472,6 +1516,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is in a directory that is ignored along with its files by a pattern that ends with `/**` and then unignored by pattern that ends with `/`', () => {
@@ -1494,6 +1539,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is in a directory that is ignored along with its files by a pattern that ends with `/**` and then unignored by pattern that does not end with `/`', () => {
@@ -1516,6 +1562,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return false when file is in a directory that is ignored along its files by pattern that ends with `/**` and then unignored along its files by pattern that ends with `/**`', () => {
@@ -1538,6 +1585,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			it('should return true when file is ignored by a pattern and there are unignore patterns that target files of a directory with the same name', () => {
@@ -1559,6 +1607,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo'))).to.be.true;
 			});
 
 			it('should return true when file is in a directory that is ignored even if an unignore pattern that ends with `/*` matches the file', () => {
@@ -1579,6 +1628,7 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'foo/a.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'foo/a.js'))).to.be.true;
 			});
 
 			// https://github.com/eslint/eslint/issues/17964#issuecomment-1879840650
@@ -1607,9 +1657,13 @@ describe('ConfigArray', () => {
 				configs.normalizeSync();
 
 				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/foo.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'tests/format/foo.js'))).to.be.true;
 				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/jsfmt.spec.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'tests/format/jsfmt.spec.js'))).to.be.true;
 				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/subdir/foo.js'))).to.be.true;
+				expect(configs.isFileConfigured(path.join(basePath, 'tests/format/subdir/foo.js'))).to.be.true;
 				expect(configs.isFileIgnored(path.join(basePath, 'tests/format/subdir/jsfmt.spec.js'))).to.be.false;
+				expect(configs.isFileConfigured(path.join(basePath, 'tests/format/subdir/jsfmt.spec.js'))).to.be.true;
 			});
 
 			// https://github.com/eslint/eslint/pull/16579/files
@@ -1629,6 +1683,7 @@ describe('ConfigArray', () => {
 					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
 	
 					expect(configs.isFileIgnored(filename)).to.be.true;
+					expect(configs.isFileConfigured(filename)).to.be.false;
 				});				
 
 				it('should return true when a subdirectory is ignored and then we try to unignore a file', () => {
@@ -1645,6 +1700,7 @@ describe('ConfigArray', () => {
 					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
 	
 					expect(configs.isFileIgnored(filename)).to.be.true;
+					expect(configs.isFileConfigured(filename)).to.be.false;
 				});
 
 				it('should return true when all descendant directories are ignored and then we try to unignore a file', () => {
@@ -1661,6 +1717,7 @@ describe('ConfigArray', () => {
 					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
 	
 					expect(configs.isFileIgnored(filename)).to.be.true;
+					expect(configs.isFileConfigured(filename)).to.be.false;
 				});				
 
 				it('should return true when all descendant directories are ignored without leading slash and then we try to unignore a file', () => {
@@ -1677,6 +1734,7 @@ describe('ConfigArray', () => {
 					const filename = path.resolve(basePath, 'node_modules/foo/bar.js');
 	
 					expect(configs.isFileIgnored(filename)).to.be.true;
+					expect(configs.isFileConfigured(filename)).to.be.true;
 				});				
 			});
 

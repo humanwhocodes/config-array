@@ -453,6 +453,9 @@ export const ConfigArraySymbol = {
 // used to store calculate data for faster lookup
 const dataCache = new WeakMap();
 
+// A value indicating that a file has no matching configuration. Should be a unique object or symbol.
+const NoMatchingConfig = { };
+
 /**
  * Represents an array of config objects and provides method for working with
  * those config objects.
@@ -759,6 +762,16 @@ export class ConfigArray extends Array {
 	 * @returns {Object} The config object for this file.
 	 */
 	getConfig(filePath) {
+		const config = this.getConfigOrNoMatch(filePath);
+		if (config !== NoMatchingConfig) return config;
+	}
+
+	/**
+	 * Returns the config object for a given file path or a `NoMatchingConfig` indicator.
+	 * @param {string} filePath The complete path of a file to get a config for.
+	 * @returns {Object} The config object or `NoMatchingConfig` indicator for this file.
+	 */
+	getConfigOrNoMatch(filePath) {
 
 		assertNormalized(this);
 
@@ -885,6 +898,7 @@ export class ConfigArray extends Array {
 			debug(`No matching configs found for ${filePath}`);
 
 			// cache and return result - finalConfig is undefined at this point
+			finalConfig = NoMatchingConfig;
 			cache.set(filePath, finalConfig);
 			return finalConfig;
 		}
@@ -935,6 +949,15 @@ export class ConfigArray extends Array {
 	 */
 	isFileIgnored(filePath) {
 		return this.getConfig(filePath) === undefined;
+	}
+
+	/**
+	 * Determines if the given filepath has a matching config.
+	 * @param {string} filePath The complete path of a file to check.
+	 * @returns {boolean} True if the path has a matching config, false if not.
+	 */
+	isFileConfigured(filePath) {
+		return this.getConfigOrNoMatch(filePath) !== NoMatchingConfig;
 	}
 
 	/**
