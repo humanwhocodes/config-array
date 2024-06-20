@@ -157,6 +157,19 @@ function assertValidBaseConfig(config, index) {
 }
 
 /**
+ * A version of `path.relative()` that does not substitute `process.cwd()`
+ * when it sees an empty string. This is necessary because `basePath` can
+ * be an empty string in `ConfigArray`. In that case, we don't want the cwd
+ * to be substituted.
+ * @param {string} from The path to calculate from.
+ * @param {string} to The path to calculate to.
+ * @returns {string} The relative path between `from` and `to`.
+ */
+function safePathRelative(from, to) {
+	return from ? path.relative(from, to) : to;
+}
+
+/**
  * Wrapper around minimatch that caches minimatch patterns for
  * faster matching speed over multiple file path evaluations.
  * @param {string} filepath The file path to match.
@@ -346,7 +359,7 @@ function pathMatchesIgnores(filePath, basePath, config) {
 	 * file path while strings are compared against the relative
 	 * file path.
 	 */
-	const relativeFilePath = path.relative(basePath, filePath);
+	const relativeFilePath = safePathRelative(basePath, filePath);
 
 	return Object.keys(config).filter(key => !META_FIELDS.has(key)).length > 1 &&
 		!shouldIgnorePath(config.ignores, filePath, relativeFilePath);
@@ -371,7 +384,7 @@ function pathMatches(filePath, basePath, config) {
 	 * file path while strings are compared against the relative
 	 * file path.
 	 */
-	const relativeFilePath = path.relative(basePath, filePath);
+	const relativeFilePath = safePathRelative(basePath, filePath);
 
 	// match both strings and functions
 	const match = pattern => {
@@ -724,8 +737,10 @@ export class ConfigArray extends Array {
 			return result;
 		}
 
-		// TODO: Maybe move elsewhere? Maybe combine with getConfig() logic?
-		const relativeFilePath = path.relative(this.basePath, filePath);
+		/*
+		 * TODO: Maybe move elsewhere? Maybe combine with getConfig() logic?
+		 */
+		const relativeFilePath = safePathRelative(this.basePath, filePath);
 
 		if (shouldIgnorePath(this.ignores, filePath, relativeFilePath)) {
 			debug(`Ignoring ${filePath}`);
@@ -782,8 +797,10 @@ export class ConfigArray extends Array {
 			return finalConfig;
 		}
 
-		// TODO: Maybe move elsewhere?
-		const relativeFilePath = path.relative(this.basePath, filePath);
+		/*
+		 * TODO: Maybe move somewhere else?
+		 */
+		const relativeFilePath = safePathRelative(this.basePath, filePath);
 
 		if (shouldIgnorePath(this.ignores, filePath, relativeFilePath)) {
 			debug(`Ignoring ${filePath} based on file pattern`);
@@ -952,8 +969,7 @@ export class ConfigArray extends Array {
 
 		assertNormalized(this);
 
-		const relativeDirectoryPath = path.relative(this.basePath, directoryPath)
-			.replace(/\\/g, '/');
+		const relativeDirectoryPath = safePathRelative(this.basePath, directoryPath).replace(/\\/g, '/');
 
 		if (relativeDirectoryPath.startsWith('..')) {
 			return true;

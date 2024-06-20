@@ -971,6 +971,93 @@ describe('ConfigArray', () => {
 
 			});	
 
+			// https://github.com/eslint/eslint/issues/17669
+			describe('basePath is an empty string', () => {
+
+				describe('with **/*.js', () => {					
+					beforeEach(() => {
+						configs = new ConfigArray([
+							{
+								files: ['**/*.js'],
+								defs: {
+									severity: 'error'
+								}
+							}
+						], { basePath: '', schema });
+		
+						configs.normalizeSync();
+					});
+	
+					it('should return a config when a filename matches a files pattern', () => {
+	
+						const config = configs.getConfig('foo.js');
+						expect(config).to.deep.equal({
+							defs: {
+								severity: 'error'
+							}
+						});
+					});
+	
+					it('should return a config when a relative path filename matches a files pattern', () => {
+	
+						const config = configs.getConfig('x/foo.js');
+						expect(config).to.deep.equal({
+							defs: {
+								severity: 'error'
+							}
+						});
+					});
+	
+					it('should return a config when an absolute path filename matches a files pattern', () => {
+	
+						const config = configs.getConfig('/x/foo.js');
+						expect(config).to.deep.equal({
+							defs: {
+								severity: 'error'
+							}
+						});
+					});
+				});
+
+				describe('with x/*.js', () => {					
+					beforeEach(() => {
+						configs = new ConfigArray([
+							{
+								files: ['x/*.js'],
+								defs: {
+									severity: 'error'
+								}
+							}
+						], { basePath: '', schema });
+		
+						configs.normalizeSync();
+					});
+	
+					it('should return undefined when a filename does not match a files pattern', () => {
+	
+						const config = configs.getConfig('foo.js');
+						expect(config).to.be.undefined;
+					});
+	
+					it('should return a config when a relative path filename matches a files pattern', () => {
+	
+						const config = configs.getConfig('x/foo.js');
+						expect(config).to.deep.equal({
+							defs: {
+								severity: 'error'
+							}
+						});
+					});
+	
+					it('should return undefined when an absolute path filename does not match a files pattern', () => {
+	
+						const config = configs.getConfig('/x/foo.js');
+						expect(config).to.be.undefined;
+					});
+				});
+
+			});
+
 		});
 
 		describe('isIgnored()', () => {
@@ -2114,6 +2201,69 @@ describe('ConfigArray', () => {
 
 				expect(configs.isExplicitMatch(filename)).to.be.false;
 			});
+
+			// https://github.com/eslint/eslint/issues/17669
+			describe('basePath is an empty string', () => {
+
+				describe('with **/*.js', () => {
+					
+					beforeEach(() => {
+						configs = new ConfigArray([
+							{
+								files: ['**/*.js'],
+								defs: {
+									severity: 'error'
+								}
+							}
+						], { basePath: '', schema });
+	
+						configs.normalizeSync();
+					});
+	
+					it('should return true when a filename matches a files pattern', () => {
+						expect(configs.isExplicitMatch('foo.js')).to.be.true;
+					});
+	
+					it('should return true when a relative path filename matches a files pattern', () => {
+						expect(configs.isExplicitMatch('x/foo.js')).to.be.true;
+					});
+	
+					it('should return true when an absolute path filename matches a files pattern', () => {
+						expect(configs.isExplicitMatch('/x/foo.js')).to.be.true;
+					});
+				});
+
+			});
+
+			describe('with x/*.js', () => {
+
+				beforeEach(() => {
+					configs = new ConfigArray([
+						{
+							files: ['x/*.js'],
+							defs: {
+								severity: 'error'
+							}
+						}
+					], { basePath: '', schema });
+
+					configs.normalizeSync();
+				});
+
+				it('should return false when a filename does not match a files pattern', () => {
+					expect(configs.isExplicitMatch('foo.js')).to.be.false;
+				});
+
+				it('should return true when a relative path filename matches a files pattern', () => {
+					expect(configs.isExplicitMatch('x/foo.js')).to.be.true;
+				});
+
+				it('should return false when an absolute path filename does not match a files pattern', () => {
+					expect(configs.isExplicitMatch('/x/foo.js')).to.be.false;
+				});
+				
+			});
+
 
 		});
 
